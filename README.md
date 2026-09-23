@@ -17,9 +17,10 @@ Das Coaching folgt dem **4-Phasen-Modell**:
 - **Gefühle** – 20 Gefühlskarten (nach Grundgefühl sortiert) aufs Brett legen, die Stärke einschätzen (ein bisschen / mittel / sehr).
 - **Skala** – Skalen von 0 bis 10 als Elemente auf der Fläche, beliebig viele und frei kombinierbar (verschieben, drehen – z. B. senkrecht –, vergrößern). Punkte wie „Heute“, „Ziel“, „Nächster Schritt“ oder eigene Punkte auf eine Skala ziehen; zum Löschen weit wegziehen. Die Frage schreibt man mit dem Stift oben auf die Skala. Wahlweise mit Zahlen oder Gesichtern. Skalen gibt es auch im Aktionsbrett und bei den Karten.
 - **Aktionsbrett** – Figuren (rund/eckig, groß/klein, 10 Farben) mit Augen für die Blickrichtung, dazu Symbole (Zuhause, Schule, Stein, Stern …). Figuren lassen sich benennen und drehen.
-- **Karten** – Methodenkarten in rechteckig, rund oder oval, **mit dem Apple Pencil (oder Finger) beschriftet**, mit Linien verbindbar. Jede Karte kann eine **Ampel** bekommen (Später / Bald / Jetzt). Mit dem Hintergrund „Ampel“ gibt es drei Zonen – eine Karte bekommt automatisch die Farbe der Zone, in die man sie legt.
-- **Zeitlinie** – Vergangenheit, Heute, Zukunft. Die Ich-Figur steht auf „Heute“ und kann an andere Zeitpunkte geschoben werden. Karten, Gefühle, Symbole und Figuren lassen sich dazulegen; Verbindungen werden als **Pfeile** gezeichnet („eine Kraftquelle aus der Vergangenheit mitnehmen“).
-- **Ressourcen-Landkarte** – „Ich“ in der Mitte, rundherum sechs Bereiche (Menschen, Stärken, Hobbys, Orte, Erfolge, Tiere & Dinge) und drei Nähe-Ringe. Figuren, Symbole und Karten hineinlegen: je näher an der Mitte, desto wichtiger.
+- **Karten** – Methodenkarten in rechteckig, rund oder oval, **mit dem Apple Pencil (oder Finger) beschriftet**, mit Linien verbindbar. Jede Karte kann eine **Ampel** bekommen (Später / Bald / Jetzt). Mit dem Hintergrund „Ampel“ gibt es drei Zonen (links grün, rechts rot) – eine Karte bekommt automatisch die Farbe der Zone, in die man sie legt.
+- **Zeitlinie** – ein Zeitstrahl als Element: Vergangenheit, Heute, Zukunft. Die Ich-Figur steht auf „Heute“ und kann an andere Zeitpunkte geschoben werden. Karten, Gefühle und Figuren lassen sich dazulegen; neue Verbindungen werden hier als **Pfeile** gezeichnet („eine Kraftquelle aus der Vergangenheit mitnehmen“). Jede Linie lässt sich zwischen Pfeil und Linie umschalten.
+- **Ressourcen-Landkarte** – eine Landkarte als Element: „Ich“ in der Mitte, rundherum sechs Bereiche (Menschen, Stärken, Hobbys, Orte, Erfolge, Tiere & Dinge) und drei Nähe-Ringe. Je näher an der Mitte, desto wichtiger.
+- **Zeitstrahl und Landkarte** lassen sich verschieben, drehen, vergrößern und mehrfach legen. Was darauf liegt, **wandert beim Verschieben mit**. Mit der **Stecknadel** („Festmachen“) bleiben sie liegen.
 - **Commitment** – „Mein Versprechen an mich“: Vorhaben, bis wann, wer hilft, wie sicher (0–10) und zwei Unterschriften – alles von Hand. Es erscheint beim **Abschluss** der Sitzung und zu Beginn der **nächsten Sitzung** wieder („Wie ist es gelaufen?“ – mit Stempel).
 - Im Coach-Bereich stehen zu jedem Werkzeug passende **Fragen zur Methode**.
 
@@ -32,6 +33,7 @@ Das Coaching folgt dem **4-Phasen-Modell**:
 - Antippen zeigt eine kleine Leiste zum Benennen, Umfärben, Drehen und Löschen.
 - Oben rechts: **Rückgängig**.
 - **Coach-Bereich:** Das Coach-Symbol oben links **gedrückt halten**. Dort: Phase wechseln, Werkzeug wählen, Leitfragen, Momente festhalten und vergleichen, Notizen, Sitzung beenden.
+- **Eine gemeinsame Arbeitsfläche:** Alle Werkzeuge außer dem Commitment arbeiten auf derselben Fläche. Beim Werkzeugwechsel bleibt alles liegen, nur die Seitenleiste wechselt – so lassen sich Gefühle, Figuren, Karten, Skalen, Zeitstrahl und Landkarte beliebig kombinieren.
 - **Arbeitsfläche über alle Phasen behalten:** Schalter im Coach-Bereich. Dann bleibt beim Phasenwechsel alles liegen, nur die Farben wechseln. Die letzte Wahl gilt auch für neue Sitzungen.
 - **Momente** sind Zwischenstände, z. B. „So ist es jetzt“ und „So soll es sein“. Zwei Momente lassen sich nebeneinander vergleichen.
 

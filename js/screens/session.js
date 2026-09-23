@@ -3,7 +3,8 @@ import { h, img, deepClone, uid } from '../util.js';
 import { icon } from '../icons.js';
 import { store } from '../store.js';
 import { PHASEN, WERKZEUGE, phaseById, phaseIndex } from '../data.js';
-import { TOOL_IMPL } from '../tools/index.js';
+import { TOOL_IMPL, istFlaeche } from '../tools/index.js';
+import { flaecheZusammenfuehren } from '../tools/flaeche.js';
 import { attachLongPress } from '../gestures.js';
 import { avatar, toast, flash, confirmDialog } from '../ui.js';
 import { openCoach } from './coach.js';
@@ -43,10 +44,21 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
   let werkzeug = null; // laufendes Werkzeug
   const speichern = () => store.touch(ses);
 
-  // Im Modus „durchgehend“ teilen sich alle Phasen dieselben Arbeitsflächen.
+  // Im Modus „durchgehend“ teilen sich alle Phasen dieselbe Arbeitsfläche.
   const bereich = () => (ses.durchgehend ? 'alle' : ses.phase);
   const aktuellesWerkzeug = () => ses.tools[bereich()] || null;
-  const flaechenKey = (toolId) => `${bereich()}:${toolId}`;
+  // Alle Werkzeuge außer dem Commitment nutzen dieselbe Fläche („flaeche“).
+  const art = (toolId) => (istFlaeche(toolId) ? 'flaeche' : toolId);
+  const flaechenKey = (toolId, b = bereich()) => `${b}:${art(toolId)}`;
+
+  /** Zustand einer Fläche holen – ältere Einzelflächen werden dabei zusammengeführt. */
+  function flaecheHolen(toolId, b = bereich()) {
+    const key = flaechenKey(toolId, b);
+    if (!ses.boards[key]) {
+      ses.boards[key] = istFlaeche(toolId) ? flaecheZusammenfuehren(ses.boards, b) : TOOL_IMPL[toolId].create(ses.phase);
+    }
+    return ses.boards[key];
+  }
 
   // ---------- Phasen ----------
   function themaSetzen() {
@@ -124,7 +136,14 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
     );
   }
 
-  function buehneZeichnen() {
+  function buehneZeichnen({ neu = false } = {}) {
+    const toolId = aktuellesWerkzeug();
+    // Wechsel zwischen zwei Werkzeugen der Arbeitsfläche: nur die Seitenleiste tauschen
+    if (!neu && werkzeug?.flaeche && istFlaeche(toolId) && werkzeug.key === flaechenKey(toolId)) {
+      werkzeug.werkzeugSetzen(toolId, ses.phase);
+      undoAktualisieren();
+      return;
+    }
     const alt = [...buehne.children];
     alt.forEach((c) => {
       c.classList.add('stage-leave');
@@ -134,22 +153,21 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
     werkzeug = null;
 
     const p = phaseById(ses.phase);
-    const toolId = aktuellesWerkzeug();
     const platz = h('div', { class: 'stage-inner stage-enter' });
     buehne.append(platz);
 
     if (!toolId || !TOOL_IMPL[toolId]) {
       platz.append(phasenStart(p));
     } else {
-      const key = flaechenKey(toolId);
-      ses.boards[key] ||= TOOL_IMPL[toolId].create(ses.phase);
       werkzeug = TOOL_IMPL[toolId].mount(platz, {
-        state: ses.boards[key],
+        state: flaecheHolen(toolId),
         phase: ses.phase,
         schueler,
         onChange: speichern,
         onHistory: undoAktualisieren,
       });
+      werkzeug.key = flaechenKey(toolId);
+      speichern();
     }
     undoAktualisieren();
   }
@@ -199,7 +217,7 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
         const id = aktuellesWerkzeug();
         if (!id) return;
         const ok = await confirmDialog({
-          title: `${WERKZEUGE[id].name} leeren?`,
+          title: istFlaeche(id) ? 'Arbeitsfläche leeren?' : `${WERKZEUGE[id].name} leeren?`,
           text: 'Alles auf dieser Fläche wird entfernt. Gespeicherte Momente bleiben erhalten.',
           okText: 'Leeren',
           danger: true,
@@ -207,7 +225,7 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
         if (!ok) return;
         ses.boards[flaechenKey(id)] = TOOL_IMPL[id].create(ses.phase);
         speichern();
-        buehneZeichnen();
+        buehneZeichnen({ neu: true });
       },
       beenden() {
         ses.finished = true;
@@ -229,24 +247,33 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
   /** Modus wechseln, ohne dass sich die sichtbare Fläche ändert. */
   function durchgehendSetzen(an) {
     if (an === !!ses.durchgehend) return;
+    // Ältere Einzelflächen vorher zusammenführen
+    for (const b of ['alle', ...PHASEN.map((p) => p.id)]) {
+      if (!ses.boards[`${b}:flaeche`] && Object.keys(ses.boards).some((k) => k.startsWith(b + ':') && istFlaeche(k.split(':')[1]))) {
+        ses.boards[`${b}:flaeche`] = flaecheZusammenfuehren(ses.boards, b);
+      }
+    }
     if (an) {
       const tool = ses.tools[ses.phase] || null;
-      for (const id of Object.keys(TOOL_IMPL)) {
-        // Aktuelle Phase zuerst, sonst die späteste Phase mit Inhalt für dieses Werkzeug
+      for (const kind of ['flaeche', 'commitment']) {
+        // Was gerade zu sehen ist, zuerst – sonst die späteste Phase mit Inhalt
         const reihe = [ses.phase, ...PHASEN.map((p) => p.id).reverse()];
-        const quelle = reihe.map((ph) => ses.boards[`${ph}:${id}`]).find(Boolean);
-        if (quelle && (id === tool || !ses.boards[`alle:${id}`])) ses.boards[`alle:${id}`] = deepClone(quelle);
+        const quelle = reihe.map((ph) => ses.boards[`${ph}:${kind}`]).find(Boolean);
+        const sichtbar = tool && art(tool) === kind;
+        if (quelle && (sichtbar || !ses.boards[`alle:${kind}`])) ses.boards[`alle:${kind}`] = deepClone(quelle);
       }
       if (tool) ses.tools.alle = tool;
     } else {
       const tool = ses.tools.alle || null;
-      if (tool && ses.boards[`alle:${tool}`]) ses.boards[`${ses.phase}:${tool}`] = deepClone(ses.boards[`alle:${tool}`]);
+      if (tool && ses.boards[flaechenKey(tool, 'alle')]) {
+        ses.boards[flaechenKey(tool, ses.phase)] = deepClone(ses.boards[flaechenKey(tool, 'alle')]);
+      }
       if (tool) ses.tools[ses.phase] = tool;
     }
     ses.durchgehend = an;
     store.setSetting('durchgehend', an);
     speichern();
-    buehneZeichnen();
+    buehneZeichnen({ neu: true });
     toast(an ? 'Die Arbeitsfläche bleibt jetzt in allen Phasen gleich' : 'Jede Phase hat jetzt wieder ihre eigene Fläche');
   }
 
@@ -254,6 +281,7 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
     const id = aktuellesWerkzeug();
     if (!id) return false;
     const key = flaechenKey(id);
+    if (!ses.boards[key]) return false;
     ses.moments.push({
       id: uid(),
       createdAt: Date.now(),

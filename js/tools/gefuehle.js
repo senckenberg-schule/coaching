@@ -1,6 +1,6 @@
 // Gefühlskarten: aus dem Stapel wählen, auf die Fläche legen, Stärke einschätzen.
 import { h, img } from '../util.js';
-import { createBoard, trayItem } from '../board.js';
+import { trayItem } from '../board.js';
 import { getGefuehle, gefuehlById, gruppeById } from '../assets.js';
 
 const STAERKEN = [
@@ -59,50 +59,6 @@ export function gefuehlToolbar(it, api) {
   ];
 }
 
-export default {
-  create() {
-    return { items: [], links: [] };
-  },
-
-  mount(container, { state, readOnly = false, onChange, onHistory }) {
-    const wrap = h('div', { class: 'tool tool-gefuehle' + (readOnly ? ' readonly' : '') });
-    const main = h('div', { class: 'tool-main' });
-    wrap.append(main);
-    container.append(wrap);
-
-    let stapelNeuZeichnen = () => {};
-    const board = createBoard(main, {
-      state,
-      types: { gefuehl: GEFUEHL_TYPE },
-      readOnly,
-      onChange: () => {
-        onChange?.();
-        stapelNeuZeichnen();
-      },
-      onHistory,
-      emptyHint: 'Welche Gefühle hast du gerade? Lege sie hierher.',
-      toolbar: gefuehlToolbar,
-    });
-
-    if (!readOnly) {
-      const { el, neuZeichnen } = gefuehlStapel(board, state);
-      stapelNeuZeichnen = neuZeichnen;
-      wrap.append(h('div', { class: 'tray glass tray-gefuehle' }, el));
-    }
-
-    return {
-      destroy() {
-        board.destroy();
-        wrap.remove();
-      },
-      undo: () => {
-        board.undo();
-        stapelNeuZeichnen();
-      },
-      canUndo: () => board.canUndo(),
-    };
-  },
-};
 
 /** Stapel der Gefühlskarten (für die Seitenleiste). */
 export function gefuehlStapel(board, state) {

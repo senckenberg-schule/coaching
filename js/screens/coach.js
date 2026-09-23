@@ -4,6 +4,7 @@ import { icon } from '../icons.js';
 import { PHASEN, WERKZEUGE, WERKZEUG_REIHENFOLGE, MOMENT_VORSCHLAEGE, phaseById, phaseIndex } from '../data.js';
 import { ask, confirmDialog } from '../ui.js';
 import { zeigeMoment, vergleicheMomente } from './moments.js';
+import { istFlaeche } from '../tools/index.js';
 
 export function openCoach(ctx) {
   const { ses } = ctx;
@@ -81,6 +82,7 @@ export function openCoach(ctx) {
 
       abschnitt(
         ctx.durchgehend() ? 'Werkzeug (für alle Phasen)' : `Werkzeug für „${p.name}“`,
+        h('p', { class: 'dr-empty' }, 'Beim Wechsel bleibt die Arbeitsfläche erhalten – so lassen sich alle Werkzeuge kombinieren. Nur das Commitment hat eine eigene Karte.'),
         h(
           'div',
           { class: 'dr-tools' },
@@ -127,7 +129,7 @@ export function openCoach(ctx) {
                 },
               },
               icon('eraser', 'small'),
-              `${WERKZEUGE[aktuell].name} leeren`,
+              istFlaeche(aktuell) ? 'Arbeitsfläche leeren' : `${WERKZEUGE[aktuell].name} leeren`,
             )
           : null,
       ),

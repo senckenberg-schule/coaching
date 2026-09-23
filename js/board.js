@@ -22,7 +22,7 @@ export function createBoard(container, cfg) {
     emptyHint = '',
     hintergrund = null, // (state) => Element: Vorlage im Hintergrund
     onMoved = () => false, // (item) => true, wenn sich das Element dadurch verändert hat
-    pfeile = false, // Verbindungen als Pfeile zeichnen
+    pfeile = false, // neue Verbindungen als Pfeile zeichnen (Wert oder Funktion)
   } = cfg;
   state.items ||= [];
   state.links ||= [];
@@ -53,7 +53,7 @@ export function createBoard(container, cfg) {
   let verbindeVon = null;
   let letzterTap = { id: null, t: 0 };
   const aktiveGesten = new Set();
-  let zZaehler = 1;
+  let zZaehler = 10; // Elemente „unten“ (Zeitstrahl, Landkarte) liegen auf Ebene 1
 
   const hist = createHistory(
     () => ({ items: state.items, links: state.links, ink: state.ink }),
@@ -108,7 +108,7 @@ export function createBoard(container, cfg) {
     els.set(item.id, eintrag);
     inhaltZeichnen(item);
     if (!readOnly) eintrag.gesture = gestenAnbinden(item, eintrag);
-    el.style.zIndex = ++zZaehler;
+    el.style.zIndex = t.unten ? 1 : ++zZaehler;
     ebene.append(el);
     positionieren(item);
     if (pop) setTimeout(() => el.classList.remove('pop'), 700);
@@ -149,12 +149,13 @@ export function createBoard(container, cfg) {
   }
 
   function hinweisAktualisieren() {
-    hinweis.classList.toggle('show', !!emptyHint && state.items.length === 0 && state.ink.length === 0 && !readOnly);
+    hinweis.classList.toggle('show', !!hinweis.textContent && state.items.length === 0 && state.ink.length === 0 && !readOnly);
   }
 
   // Nach vorne holen über z-index – das Element im DOM zu verschieben
   // würde den Finger „verlieren“ (Pointer-Capture).
   function nachVorne(item) {
+    if (typ(item).unten) return;
     const i = state.items.indexOf(item);
     if (i > -1 && i < state.items.length - 1) {
       state.items.splice(i, 1);
@@ -202,7 +203,7 @@ export function createBoard(container, cfg) {
         const y = 0.18 + (gy / 4) * 0.64 + (Math.random() - 0.5) * 0.04;
         let d = Infinity;
         for (const it of state.items) {
-          if (it._neu) continue;
+          if (it._neu || typ(it).unten) continue;
           d = Math.min(d, Math.hypot((it.x - x) * W, (it.y - y) * H));
         }
         const zentrum = Math.hypot((x - 0.5) * W, (y - 0.5) * H) * 0.15;
@@ -213,23 +214,49 @@ export function createBoard(container, cfg) {
     return best;
   }
 
+  /** Was auf einem „tragenden“ Element liegt, wandert beim Verschieben mit. */
+  function passagiereSammeln(item) {
+    const r = els.get(item.id).el.getBoundingClientRect();
+    const drin = (x, y) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    const items = state.items.filter((o) => {
+      if (o === item || typ(o).unten) return false;
+      const or = els.get(o.id)?.el.getBoundingClientRect();
+      return or && drin(or.left + or.width / 2, or.top + or.height / 2);
+    });
+    const b = root.getBoundingClientRect();
+    const ink = state.ink.filter((st) => st.p.every(([x, y]) => drin(b.left + x * W, b.top + y * H)));
+    return { items, ink };
+  }
+
   // ---------- Gesten ----------
   function gestenAnbinden(item, eintrag) {
     const t = typ(item);
     let vorher = null;
     let kuerzlichNeu = false;
+    let passagiere = null;
     const g = attachGesture(eintrag.el, {
       onStart() {
         vorher = hist.capture();
         kuerzlichNeu = !!item._neu;
+        passagiere = t.traegt && !item.fest && !kuerzlichNeu ? passagiereSammeln(item) : null;
         nachVorne(item);
         eintrag.el.classList.add('dragging');
         aktiveGesten.add(g);
         oben.classList.add('hidden');
       },
       onMove({ dx, dy, dr, ds, count }) {
+        if (item.fest) return; // festgemacht
         item.x += dx / W;
         item.y += dy / H;
+        if (passagiere) {
+          for (const p of passagiere.items) {
+            p.x += dx / W;
+            p.y += dy / H;
+            positionieren(p);
+          }
+          for (const st of passagiere.ink) for (const pt of st.p) (pt[0] += dx / W), (pt[1] += dy / H);
+          if (passagiere.ink.length) inkZeichnen();
+        }
         if (count > 1 && t.rotate) item.rot = ((item.rot || 0) + dr) % 360;
         if (count > 1 && t.scale) item.scale = clamp((item.scale || 1) * ds, 0.55, 2.6);
         festhalten(item, true);
@@ -243,7 +270,7 @@ export function createBoard(container, cfg) {
         if (kuerzlichNeu) {
           delete item._neu;
           if (!moved) {
-            const p = freierPlatz();
+            const p = t.unten ? { x: 0.5, y: 0.5 } : freierPlatz();
             item.x = p.x;
             item.y = p.y;
           }
@@ -306,7 +333,7 @@ export function createBoard(container, cfg) {
     const gibt = state.links.some((l) => (l.a === a && l.b === b) || (l.a === b && l.b === a));
     if (!gibt) {
       hist.push();
-      state.links.push({ id: uid(), a, b });
+      state.links.push({ id: uid(), a, b, pfeil: typeof pfeile === 'function' ? pfeile() : !!pfeile });
       verbindungenZeichnen();
       const neu = linkEls.get(state.links[state.links.length - 1].id);
       neu?.line.classList.add('draw');
@@ -332,7 +359,7 @@ export function createBoard(container, cfg) {
     const by = b.y * H;
     const cx = (ax + bx) / 2 - (by - ay) * 0.12;
     const cy = (ay + by) / 2 + (bx - ax) * 0.12;
-    if (!pfeile) return { d: `M${ax},${ay} Q${cx},${cy} ${bx},${by}` };
+    if (!l.pfeil) return { d: `M${ax},${ay} Q${cx},${cy} ${bx},${by}` };
     // Pfeil: Linie am Rand des Ziels enden lassen und eine Spitze anhängen
     const [bw, bh] = groesse(b);
     let tx = bx - cx;
@@ -474,6 +501,18 @@ export function createBoard(container, cfg) {
       ankerUnten = ankerOben + 20;
       eintraege = [
         {
+          icon: 'arrowRight',
+          label: l.pfeil ? 'Ohne Pfeil' : 'Pfeil',
+          active: !!l.pfeil,
+          onClick: () => {
+            hist.push();
+            l.pfeil = !l.pfeil;
+            verbindungenZeichnen();
+            toolbarZeichnen();
+            onChange();
+          },
+        },
+        {
           icon: 'trash',
           label: 'Linie löschen',
           danger: true,
@@ -544,7 +583,9 @@ export function createBoard(container, cfg) {
     const bw = leiste.offsetWidth;
     const bh = leiste.offsetHeight;
     let top = ankerOben - bh - 16;
-    if (top < 8) top = Math.min(ankerUnten + 12, H - bh - 8);
+    if (top < 8) top = ankerUnten + 12;
+    // Große Elemente: Leiste innen oben anzeigen, wenn außen kein Platz ist
+    if (top + bh > H - 76) top = clamp(ankerOben + 14, 8, H - bh - 76);
     leiste.style.left = clamp(ankerX - bw / 2, 8, Math.max(8, W - bw - 8)) + 'px';
     leiste.style.top = top + 'px';
   }
@@ -817,6 +858,11 @@ export function createBoard(container, cfg) {
     elementVon: (id) => els.get(id)?.el,
     /** Vorlage im Hintergrund neu zeichnen (z. B. nach dem Umschalten). */
     hintergrundNeu: hintergrundZeichnen,
+    /** Hinweis auf der leeren Fläche ändern. */
+    setHinweis(text) {
+      hinweis.textContent = text || '';
+      hinweisAktualisieren();
+    },
     /** Alle Elemente neu zeichnen (z. B. nach einer Änderung von außen). */
     neuZeichnen: () => allesZeichnen(),
     /** Neues Element hinzufügen – optional direkt mit dem Finger weiterziehen. */
@@ -829,11 +875,13 @@ export function createBoard(container, cfg) {
         item.y = (e.clientY - rect.top) / H;
         item._neu = true;
       } else {
-        const p = freierPlatz();
-        item.x = p.x;
-        item.y = p.y;
+        const p = types[item.type].unten ? { x: 0.5, y: 0.5 } : freierPlatz();
+        item.x ??= p.x;
+        item.y ??= p.y;
       }
-      state.items.push(item);
+      // Elemente „unten“ kommen an den Anfang der Liste (liegen unter allem anderen)
+      if (types[item.type].unten) state.items.unshift(item);
+      else state.items.push(item);
       const eintrag = elementBauen(item, { pop: true });
       if (e) eintrag.gesture.begin(e);
       else onPlaced(item);

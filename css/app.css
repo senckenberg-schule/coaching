@@ -521,7 +521,7 @@ input, textarea {
 .board-links { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .board-items, .board-over { position: absolute; inset: 0; pointer-events: none; }
 .board-items { z-index: 1; }
-.board-over { z-index: 3; }
+.board-over { z-index: 5; }
 .board-items > *, .board-over > * { pointer-events: auto; }
 .board-over.hidden > * { opacity: 0; pointer-events: none; }
 
@@ -1254,54 +1254,92 @@ input, textarea {
 .ampel-mini i.an { opacity: 1; }
 .ampel-punkt { display: inline-block; width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
 
-/* ---------- Zeitlinie ---------- */
-.vorlage-zeitlinie { position: absolute; inset: 0; }
-.zl-flaeche { position: absolute; top: 0; bottom: 0; width: 50%; }
-.zl-flaeche.vergangenheit { left: 0; background: linear-gradient(90deg, rgba(151, 117, 250, 0.14), transparent); }
-.zl-flaeche.zukunft { right: 0; background: linear-gradient(270deg, rgba(250, 176, 5, 0.16), transparent); }
-.zl-linie {
+/* ---------- Zeitstrahl (Element) ---------- */
+.zs-el {
   position: absolute;
-  left: 4%;
-  right: 5%;
-  top: 60%;
-  height: 12px;
-  margin-top: -6px;
+  inset: 0;
+  border-radius: calc(var(--u) * 4);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.35);
+  border: 2px dashed rgba(29, 35, 64, 0.12);
+}
+.zs-flaeche { position: absolute; top: 0; bottom: 0; width: 50%; }
+.zs-flaeche.vergangenheit { left: 0; background: linear-gradient(90deg, rgba(151, 117, 250, 0.2), transparent); }
+.zs-flaeche.zukunft { right: 0; background: linear-gradient(270deg, rgba(250, 176, 5, 0.22), transparent); }
+.zs-linie {
+  position: absolute;
+  left: 3%;
+  right: 6%;
+  top: 55%;
+  height: calc(var(--u) * 1.6);
+  margin-top: calc(var(--u) * -0.8);
   border-radius: 99px;
   background: linear-gradient(90deg, #b197fc, var(--accent) 50%, #fab005);
-  box-shadow: 0 4px 12px rgba(30, 40, 90, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+  box-shadow: 0 3px 10px rgba(30, 40, 90, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.6);
 }
-.zl-linie::after {
+.zs-linie::after {
   content: "";
   position: absolute;
-  right: -22px;
+  right: calc(var(--u) * -3);
   top: 50%;
-  width: 30px;
-  height: 34px;
-  margin-top: -17px;
+  width: calc(var(--u) * 4);
+  height: calc(var(--u) * 4.6);
+  margin-top: calc(var(--u) * -2.3);
   background: #fab005;
   clip-path: polygon(0 0, 100% 50%, 0 100%);
 }
-.zl-heute { position: absolute; left: 50%; top: 60%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; }
-.zl-heute i { width: 6px; height: 64px; border-radius: 3px; background: var(--accent); box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.8); }
-.zl-heute b { position: absolute; top: calc(100% + 8px); padding: 5px 16px; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 900; font-size: 17px; box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 40%, transparent); }
-.zl-label { position: absolute; top: calc(60% + 22px); display: flex; flex-direction: column; gap: 2px; }
-.zl-label b { font-size: 20px; font-weight: 900; }
-.zl-label small { font-size: 13px; font-weight: 700; color: var(--ink-3); }
-.zl-label.links { left: 4%; color: #7950f2; }
-.zl-label.rechts { right: 5%; text-align: right; color: #e67700; }
+.zs-heute { position: absolute; left: 50%; top: 55%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; }
+.zs-heute i { width: calc(var(--u) * 0.8); height: calc(var(--u) * 8); border-radius: 99px; background: var(--accent); box-shadow: 0 0 0 calc(var(--u) * 0.5) rgba(255, 255, 255, 0.85); }
+.zs-heute b { position: absolute; top: calc(100% + var(--u) * 0.8); padding: calc(var(--u) * 0.5) calc(var(--u) * 1.8); border-radius: 999px; background: var(--accent); color: #fff; font-weight: 900; font-size: calc(var(--u) * 2.2); white-space: nowrap; }
+.zs-label { position: absolute; top: calc(55% + var(--u) * 2.6); display: flex; flex-direction: column; }
+.zs-label b { font-size: calc(var(--u) * 2.5); font-weight: 900; }
+.zs-label small { font-size: calc(var(--u) * 1.6); font-weight: 700; color: var(--ink-3); }
+.zs-label.links { left: 3%; color: #7950f2; }
+.zs-label.rechts { right: 6%; text-align: right; color: #e67700; }
 .link-pfeil { fill: color-mix(in srgb, var(--ink) 55%, transparent); stroke: rgba(255, 255, 255, 0.9); stroke-width: 2px; stroke-linejoin: round; }
 .link.selected .link-pfeil { fill: var(--accent); }
 
-/* ---------- Ressourcen-Landkarte ---------- */
-.vorlage-landkarte { font-family: var(--font); }
+/* ---------- Ressourcen-Landkarte (Element) ---------- */
+.lk-el { position: absolute; inset: 0; border-radius: 50%; }
+.lk-svg { width: 100%; height: 100%; display: block; overflow: visible; font-family: var(--font); filter: drop-shadow(0 10px 24px rgba(30, 40, 90, 0.12)); }
 .lk-sektor { stroke: rgba(255, 255, 255, 0.9); stroke-width: 3; }
 .lk-ring { fill: none; stroke: rgba(29, 35, 64, 0.18); stroke-width: 2.5; stroke-dasharray: 2 10; stroke-linecap: round; }
 .lk-ringtext { font-size: 20px; font-weight: 700; fill: rgba(29, 35, 64, 0.4); }
-.lk-schild rect { fill: rgba(255, 255, 255, 0.88); stroke: rgba(255, 255, 255, 1); filter: drop-shadow(0 3px 6px rgba(30, 40, 90, 0.12)); }
+.lk-schild rect { fill: rgba(255, 255, 255, 0.9); }
 .lk-schild text { font-size: 27px; font-weight: 800; fill: var(--ink); }
 .lk-ich-schein { fill: color-mix(in srgb, var(--accent) 22%, transparent); }
-.lk-ich { fill: #fff; stroke: var(--accent); stroke-width: 6; filter: drop-shadow(0 6px 14px rgba(30, 40, 90, 0.2)); }
+.lk-ich { fill: #fff; stroke: var(--accent); stroke-width: 6; }
 .lk-ich-text { font-size: 52px; font-weight: 900; fill: var(--accent); }
+
+/* Festgemacht: kleine Stecknadel */
+.fest-nadel {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--u) * 0.6);
+  width: calc(var(--u) * 2.6);
+  height: calc(var(--u) * 2.6);
+  margin-left: calc(var(--u) * -1.3);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff8787, #e03131);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+.lk-el .fest-nadel { top: 4%; }
+
+/* Vorschauen in der Seitenleiste */
+.mini-zeitstrahl { position: relative; width: 86%; height: 36px; }
+.mini-zeitstrahl i { position: absolute; left: 0; right: 10px; top: 14px; height: 8px; border-radius: 99px; background: linear-gradient(90deg, #b197fc, var(--accent), #fab005); }
+.mini-zeitstrahl i::after { content: ""; position: absolute; right: -10px; top: -5px; border-left: 12px solid #fab005; border-top: 9px solid transparent; border-bottom: 9px solid transparent; }
+.mini-zeitstrahl b { position: absolute; left: 50%; top: 6px; width: 4px; height: 24px; margin-left: -2px; border-radius: 2px; background: var(--accent); }
+.mini-ich { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 900; background: radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.7), transparent 46%), #4c6ef5; box-shadow: 0 4px 10px rgba(30, 30, 60, 0.2); }
+.mini-landkarte {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: conic-gradient(from -30deg, #ffc9c9 0 60deg, #ffd8a8 0 120deg, #fff3bf 0 180deg, #c3fae8 0 240deg, #d0ebff 0 300deg, #e5dbff 0);
+  box-shadow: inset 0 0 0 16px rgba(255, 255, 255, 0.35), 0 4px 10px rgba(30, 40, 90, 0.12);
+  position: relative;
+}
+.mini-landkarte::after { content: "Ich"; position: absolute; inset: 24px; border-radius: 50%; background: #fff; display: grid; place-items: center; font-size: 9px; font-weight: 900; color: var(--accent); }
 
 /* =========================================================
    Commitment-Kärtchen

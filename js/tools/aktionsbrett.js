@@ -1,10 +1,9 @@
-// Aktionsbrett / Familienbrett: Figuren und Symbole aufstellen.
+// Figuren und Symbole (Aktionsbrett / Familienbrett) – Bausteine für die Arbeitsfläche.
 import { h, img } from '../util.js';
-import { createBoard, trayItem } from '../board.js';
+import { trayItem } from '../board.js';
 import { FARBEN } from '../data.js';
 import { getSymbole } from '../assets.js';
 import { ask, segmented } from '../ui.js';
-import { SKALA_TYPE, skalaToolbar, skalaTray, frageSchreiben } from './skala-element.js';
 
 export const FIGUR_TYPE = {
   size: (it) => (it.groesse === 'klein' ? [8.5, 8.5] : [12.5, 12.5]),
@@ -164,45 +163,3 @@ export function reiterLeiste(reiter) {
   return tray;
 }
 
-export default {
-  create() {
-    return { items: [], links: [] };
-  },
-
-  mount(container, { state, readOnly = false, onChange, onHistory }) {
-    const wrap = h('div', { class: 'tool tool-aktionsbrett' + (readOnly ? ' readonly' : '') });
-    const main = h('div', { class: 'tool-main' });
-    wrap.append(main);
-    container.append(wrap);
-
-    const board = createBoard(main, {
-      state,
-      types: { figur: FIGUR_TYPE, symbol: SYMBOL_TYPE, skala: SKALA_TYPE },
-      readOnly,
-      onChange,
-      onHistory,
-      emptyHint: 'Ziehe Figuren und Symbole auf das Brett',
-      onDoubleTap: (it, api) => (it.type === 'skala' ? frageSchreiben(it, api) : umbenennen(it, api)),
-      toolbar: (it, api) => (it.type === 'skala' ? skalaToolbar(it, api, board) : figurToolbar(it, api)),
-    });
-
-    if (!readOnly) {
-      wrap.append(
-        reiterLeiste([
-          { id: 'figuren', label: 'Figuren', inhalt: () => figurenTray(board) },
-          { id: 'symbole', label: 'Symbole', inhalt: () => symboleTray(board) },
-          { id: 'skalen', label: 'Skalen', inhalt: () => skalaTray(board) },
-        ]),
-      );
-    }
-
-    return {
-      destroy() {
-        board.destroy();
-        wrap.remove();
-      },
-      undo: () => board.undo(),
-      canUndo: () => board.canUndo(),
-    };
-  },
-};

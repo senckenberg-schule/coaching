@@ -1,9 +1,15 @@
-import aktionsbrett from './aktionsbrett.js';
-import skala from './skala.js';
-import karten from './karten.js';
-import gefuehle from './gefuehle.js';
-import zeitlinie from './zeitlinie.js';
-import landkarte from './landkarte.js';
 import commitment from './commitment.js';
+import { flaecheWerkzeug } from './flaeche.js';
 
-export const TOOL_IMPL = { aktionsbrett, skala, karten, gefuehle, zeitlinie, landkarte, commitment };
+// Alle Werkzeuge außer dem Commitment arbeiten auf derselben Arbeitsfläche.
+export const TOOL_IMPL = {
+  gefuehle: flaecheWerkzeug('gefuehle'),
+  skala: flaecheWerkzeug('skala'),
+  aktionsbrett: flaecheWerkzeug('aktionsbrett'),
+  karten: flaecheWerkzeug('karten'),
+  zeitlinie: flaecheWerkzeug('zeitlinie'),
+  landkarte: flaecheWerkzeug('landkarte'),
+  commitment,
+};
+
+export const istFlaeche = (id) => !!TOOL_IMPL[id]?.flaeche;

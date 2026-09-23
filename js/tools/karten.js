@@ -2,12 +2,10 @@
 // verbinden und mit der Ampel priorisieren.
 import { h, fuellen } from '../util.js';
 import { icon } from '../icons.js';
-import { createBoard, trayItem } from '../board.js';
+import { trayItem } from '../board.js';
 import { FARBEN } from '../data.js';
 import { schreibfeld, karteInkSvg } from '../ink.js';
 import { segmented } from '../ui.js';
-import { SKALA_TYPE, skalaToolbar, skalaTray, frageSchreiben } from './skala-element.js';
-import { reiterLeiste } from './aktionsbrett.js';
 
 const FORMEN = {
   rechteckig: { name: 'rechteckig', size: [21, 13.5] },
@@ -21,7 +19,8 @@ export const AMPEL = {
   gelb: { name: 'Bald', text: 'kommt als Nächstes', farbe: '#fab005' },
   gruen: { name: 'Jetzt', text: 'das packe ich an', farbe: '#2f9e44' },
 };
-const AMPEL_REIHE = ['rot', 'gelb', 'gruen'];
+// Links grün (jetzt), rechts rot (später)
+const AMPEL_REIHE = ['gruen', 'gelb', 'rot'];
 
 function schriftgroesse(text) {
   const n = (text || '').length;
@@ -137,7 +136,7 @@ export function ampelHintergrund() {
 /** Karte in eine Zone gelegt: Ampel passend setzen. */
 export function ampelZone(state, it) {
   if (state.vorlage !== 'ampel' || it.type !== 'karte') return false;
-  const neu = it.x < 1 / 3 ? 'rot' : it.x < 2 / 3 ? 'gelb' : 'gruen';
+  const neu = it.x < 1 / 3 ? 'gruen' : it.x < 2 / 3 ? 'gelb' : 'rot';
   if (it.ampel === neu) return false;
   it.ampel = neu;
   return true;
@@ -204,60 +203,4 @@ export function kartenTray(board, { vorlage } = {}) {
   return el;
 }
 
-export default {
-  create() {
-    return { items: [], links: [] };
-  },
-
-  mount(container, { state, readOnly = false, onChange = () => {}, onHistory }) {
-    const wrap = h('div', { class: 'tool tool-karten' + (readOnly ? ' readonly' : '') });
-    const main = h('div', { class: 'tool-main' });
-    wrap.append(main);
-    container.append(wrap);
-
-    const board = createBoard(main, {
-      state,
-      types: { karte: KARTE_TYPE, skala: SKALA_TYPE },
-      readOnly,
-      links: true,
-      onChange,
-      onHistory,
-      emptyHint: 'Ziehe eine Karte auf die Fläche und beschrifte sie',
-      hintergrund: (s) => (s.vorlage === 'ampel' ? ampelHintergrund() : null),
-      onMoved: (it) => ampelZone(state, it),
-      onPlaced: (it) => {
-        if (it.type === 'karte' && !it.text && !it.ink?.striche?.length) beschriften(it, board.api);
-      },
-      onDoubleTap: (it, api) => (it.type === 'skala' ? frageSchreiben(it, api) : beschriften(it, api)),
-      toolbar: (it, api) => (it.type === 'skala' ? skalaToolbar(it, api, board) : kartenToolbar(it, api)),
-    });
-
-    const vorlage = {
-      get: () => state.vorlage || 'frei',
-      set(v) {
-        state.vorlage = v === 'ampel' ? 'ampel' : undefined;
-        board.hintergrundNeu();
-        onChange();
-      },
-    };
-
-    if (!readOnly) {
-      wrap.append(
-        reiterLeiste([
-          { id: 'karten', label: 'Karten', inhalt: () => kartenTray(board, { vorlage }) },
-          { id: 'skalen', label: 'Skalen', inhalt: () => skalaTray(board) },
-        ]),
-      );
-    }
-
-    return {
-      destroy() {
-        board.destroy();
-        wrap.remove();
-      },
-      undo: () => board.undo(),
-      canUndo: () => board.canUndo(),
-    };
-  },
-};
 

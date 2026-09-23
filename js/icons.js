@@ -28,6 +28,7 @@ const PATHS = {
   note: '<path d="M6 3.5h9l3.5 3.5v13.5H6z"/><path d="M9 10h6M9 13.5h6M9 17h3.5"/>',
   eraser: '<path d="M15 4l5 5-9.5 9.5H6.5L3.5 15.5z"/><path d="M10 20h10"/><path d="M9.5 9.5l5 5"/>',
   resize: '<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/>',
+  pin: '<path d="M9 3.5h6l-1 5.5 3.5 3.5h-11L10 9z"/><path d="M12 12.5V21"/>',
   flag: '<path d="M6 21V4"/><path d="M6 4h11l-2 4 2 4H6"/>',
   sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
   exit: '<path d="M14 4h5v16h-5"/><path d="M10 8l-4 4 4 4M6 12h9"/>',
