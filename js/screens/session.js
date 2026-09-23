@@ -5,7 +5,6 @@ import { store } from '../store.js';
 import { PHASEN, WERKZEUGE, phaseById, phaseIndex } from '../data.js';
 import { TOOL_IMPL, istFlaeche } from '../tools/index.js';
 import { flaecheZusammenfuehren } from '../tools/flaeche.js';
-import { attachLongPress } from '../gestures.js';
 import { avatar, toast, flash, confirmDialog } from '../ui.js';
 import { openCoach } from './coach.js';
 import { showFinish } from './finish.js';
@@ -23,9 +22,8 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
   const undoBtn = h('button', { class: 'iconbtn glass undo', 'aria-label': 'Rückgängig' }, icon('undo'));
   const coachBtn = h(
     'button',
-    { class: 'coach-btn glass', 'aria-label': 'Coach-Bereich (gedrückt halten)' },
+    { class: 'coach-btn glass', 'aria-label': 'Coach-Bereich öffnen' },
     img('bilder/app/coach.svg'),
-    ringSvg(),
   );
   const buehne = h('main', { class: 'stage' });
 
@@ -87,7 +85,13 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
     );
   }
 
-  function phaseIntro(p) {
+  /**
+   * Einblendung der Phase: kurze Animation, dann „Tippe, um loszulegen“.
+   * Erst nach dem Tipp erscheint die Arbeitsfläche.
+   */
+  let introOffen = null;
+  function phaseIntro(p, danach = () => {}) {
+    introOffen?.(true);
     const i = phaseIndex(p.id);
     const ov = h(
       'div',
@@ -99,15 +103,29 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
         h('div', { class: 'pi-nr' }, `Phase ${i + 1} von ${PHASEN.length}`),
         h('h1', null, p.name),
         h('p', null, p.frage),
+        h('div', { class: 'pi-los' }, icon('hand'), 'Tippe, um loszulegen'),
       ),
     );
-    const weg = () => {
+    buehne.classList.add('wartet');
+    const t0 = performance.now();
+    const weg = (sofort = false) => {
+      if (introOffen !== weg) return;
+      introOffen = null;
       ov.classList.add('out');
-      setTimeout(() => ov.remove(), 500);
+      setTimeout(() => ov.remove(), 450);
+      buehne.classList.remove('wartet');
+      if (!sofort) {
+        buehne.classList.add('auftauchen');
+        setTimeout(() => buehne.classList.remove('auftauchen'), 700);
+        danach();
+      }
     };
-    ov.addEventListener('pointerdown', weg);
+    introOffen = weg;
+    // Sehr frühe Tipps (z. B. der Tipp auf die Phase selbst) nicht mitzählen
+    ov.addEventListener('pointerup', () => {
+      if (performance.now() - t0 > 350) weg();
+    });
     document.getElementById('layer').append(ov);
-    setTimeout(weg, 2100);
   }
 
   function phaseWechseln(id) {
@@ -140,6 +158,8 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
   }
 
   function buehneZeichnen({ neu = false } = {}) {
+    // Noch nichts gewählt: mit dem ersten passenden Werkzeug der Phase loslegen
+    if (ses.tools[bereich()] === undefined) ses.tools[bereich()] = phaseById(ses.phase).werkzeuge[0] || null;
     const toolId = aktuellesWerkzeug();
     // Wechsel zwischen zwei Werkzeugen der Arbeitsfläche: nur die Seitenleiste tauschen
     if (!neu && werkzeug?.flaeche && istFlaeche(toolId) && werkzeug.key === flaechenKey(toolId)) {
@@ -189,18 +209,7 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
   });
 
   // ---------- Coach-Bereich ----------
-  attachLongPress(coachBtn, 550, {
-    onStart: () => coachBtn.classList.add('holding'),
-    onCancel: () => {
-      coachBtn.classList.remove('holding');
-      coachBtn.classList.add('wiggle');
-      setTimeout(() => coachBtn.classList.remove('wiggle'), 500);
-    },
-    onDone: () => {
-      coachBtn.classList.remove('holding');
-      coach();
-    },
-  });
+  coachBtn.addEventListener('click', coach);
 
   function coach() {
     openCoach({
@@ -303,22 +312,20 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
   themaSetzen();
   phasenleisteZeichnen();
   buehneZeichnen();
-  if (intro) phaseIntro(phaseById(ses.phase));
-  // Neue Sitzung: an das Commitment von letztem Mal erinnern
+  // Neue Sitzung: nach der Einblendung an das Commitment von letztem Mal erinnern
   const vorherCm = vorherigesCommitment(ses);
-  if (intro && vorherCm) setTimeout(() => zeigeRueckblick({ vorher: vorherCm, ses, schueler, onChange: speichern }), 2500);
+  if (intro) {
+    phaseIntro(phaseById(ses.phase), () => {
+      if (vorherCm) setTimeout(() => zeigeRueckblick({ vorher: vorherCm, ses, schueler, onChange: speichern }), 500);
+    });
+  }
 
   return {
     el,
     destroy() {
+      introOffen?.(true);
       werkzeug?.destroy();
       store.saveNow();
     },
   };
-}
-
-function ringSvg() {
-  const span = h('span', { class: 'hold-ring' });
-  span.innerHTML = '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="29"/></svg>';
-  return span;
 }

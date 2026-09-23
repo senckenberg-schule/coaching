@@ -48,7 +48,7 @@ export function neuerZeitstrahl(extra = {}) {
 }
 
 /** Ich-Figur dazulegen, falls es noch keine gibt – sie steht über „Heute“ und schaut in die Zukunft. */
-export function ichFigurDazu(board, x = 0.5, y = 0.5) {
+export function ichFigurDazu(board, x, y) {
   const gibt = board.items().some((i) => i.type === 'figur' && (i.name || '').trim().toLowerCase() === 'ich');
   if (gibt) return;
   board.addItem({ id: uid(), type: 'figur', form: 'rund', groesse: 'gross', farbe: '#4c6ef5', name: 'Ich', rot: 90, x, y });

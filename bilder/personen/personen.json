@@ -1,0 +1,22 @@
+{
+  "personen": [
+    { "id": "maedchen", "name": "Mädchen", "bild": "maedchen.svg" },
+    { "id": "junge", "name": "Junge", "bild": "junge.svg" },
+    { "id": "kind", "name": "Kind", "bild": "kind.svg" },
+    { "id": "baby", "name": "Baby", "bild": "baby.svg" },
+    { "id": "frau", "name": "Frau", "bild": "frau.svg" },
+    { "id": "mann", "name": "Mann", "bild": "mann.svg" },
+    { "id": "person", "name": "Person", "bild": "person.svg" },
+    { "id": "oma", "name": "Oma", "bild": "oma.svg" },
+    { "id": "opa", "name": "Opa", "bild": "opa.svg" },
+    { "id": "lehrerin", "name": "Lehrerin", "bild": "lehrerin.svg" },
+    { "id": "lehrer", "name": "Lehrer", "bild": "lehrer.svg" },
+    { "id": "rollstuhl", "name": "Rollstuhl", "bild": "rollstuhl.svg" },
+    { "id": "freunde", "name": "Freunde", "bild": "freunde.svg" },
+    { "id": "gruppe", "name": "Gruppe", "bild": "gruppe.svg" },
+    { "id": "familie", "name": "Familie", "bild": "familie.svg" },
+    { "id": "katze", "name": "Katze", "bild": "katze.svg" },
+    { "id": "hase", "name": "Hase", "bild": "hase.svg" },
+    { "id": "pferd", "name": "Pferd", "bild": "pferd.svg" }
+  ]
+}

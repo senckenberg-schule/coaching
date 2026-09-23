@@ -2,7 +2,7 @@
 // Strategie: sofort aus dem Speicher liefern und im Hintergrund aktualisieren.
 // So erscheinen neue Versionen (z. B. ausgetauschte Bilder) beim nächsten Start.
 
-const CACHE = 'coaching-v1';
+const CACHE = 'coaching-v2';
 
 const KERN = [
   './',
@@ -41,6 +41,7 @@ const KERN = [
   'icons/apple-touch-icon.png',
   'bilder/gefuehle/gefuehle.json',
   'bilder/symbole/symbole.json',
+  'bilder/personen/personen.json',
   ...[
     'ankommen', 'ziel', 'kraftquellen', 'plan', 'aktionsbrett', 'skala', 'karten', 'gefuehle',
     'coach', 'moment', 'feier', 'glanz', 'heute', 'flagge', 'schritt', 'eigene', 'schueler',
@@ -54,6 +55,7 @@ async function bilderAusListen(cache) {
   const listen = [
     ['bilder/gefuehle/gefuehle.json', 'karten', 'bilder/gefuehle/'],
     ['bilder/symbole/symbole.json', 'symbole', 'bilder/symbole/'],
+    ['bilder/personen/personen.json', 'personen', 'bilder/personen/'],
   ];
   for (const [url, feld, ordner] of listen) {
     try {

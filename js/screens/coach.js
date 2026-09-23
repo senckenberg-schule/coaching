@@ -300,7 +300,8 @@ export function openCoach(ctx) {
     for (const m of [...liste].reverse()) {
       const ph = phaseById(m.phase);
       const w = WERKZEUGE[m.tool];
-      wrap.append(
+      const zeile = h('div', { class: 'dr-moment-zeile' });
+      zeile.append(
         h(
           'button',
           {
@@ -325,7 +326,33 @@ export function openCoach(ctx) {
           h('span', null, h('b', null, m.titel), h('small', null, `${ph.name} · ${w?.name || ''} · ${formatTime(m.createdAt)} Uhr`)),
           vergleichsModus ? h('i', { class: 'pick' }, icon('check', 'small')) : icon('chevronRight', 'small'),
         ),
+        vergleichsModus
+          ? ''
+          : h(
+              'button',
+              {
+                class: 'dr-moment-weg',
+                'aria-label': 'Moment löschen',
+                onClick: async () => {
+                  const ok = await confirmDialog({
+                    title: 'Moment löschen?',
+                    text: `„${m.titel}“ wird endgültig entfernt.`,
+                    okText: 'Löschen',
+                    danger: true,
+                  });
+                  if (!ok) return;
+                  zeile.classList.add('weg');
+                  setTimeout(() => {
+                    ses.moments = ses.moments.filter((x) => x.id !== m.id);
+                    ctx.notizGeaendert();
+                    zeichnen();
+                  }, 280);
+                },
+              },
+              icon('trash', 'small'),
+            ),
       );
+      wrap.append(zeile);
     }
     return wrap;
   }

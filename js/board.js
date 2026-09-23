@@ -35,7 +35,10 @@ export function createBoard(container, cfg) {
   const oben = h('div', { class: 'board-over' });
   const hinweis = h('div', { class: 'board-empty' }, emptyHint);
   const hintergrundEbene = h('div', { class: 'board-bg' });
-  root.append(hintergrundEbene, hinweis, svg, ebene, inkSvg, oben);
+  // Die „Welt“ lässt sich verschieben und zoomen (endlose Fläche).
+  const welt = h('div', { class: 'board-welt' });
+  welt.append(hintergrundEbene, svg, ebene, inkSvg);
+  root.append(welt, hinweis, oben);
   function hintergrundZeichnen() {
     const el = hintergrund?.(state);
     hintergrundEbene.replaceChildren(...(el ? [el] : []));
@@ -54,6 +57,15 @@ export function createBoard(container, cfg) {
   let letzterTap = { id: null, t: 0 };
   const aktiveGesten = new Set();
   let zZaehler = 10; // Elemente „unten“ (Zeitstrahl, Landkarte) liegen auf Ebene 1
+
+  // Ansicht: Verschiebung (in Bildschirm-Pixeln) und Zoom
+  let zoom = 1;
+  let panX = 0;
+  let panY = 0;
+  const ZOOM_MIN = 0.3;
+  const ZOOM_MAX = 3;
+  let zoomAnzeige = null;
+  let eingepasst = false;
 
   const hist = createHistory(
     () => ({ items: state.items, links: state.links, ink: state.ink }),
@@ -75,9 +87,20 @@ export function createBoard(container, cfg) {
     root.style.setProperty('--u', U + 'px');
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     inkSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    welt.style.width = W + 'px';
+    welt.style.height = H + 'px';
+    if (state.ansicht) {
+      panX = state.ansicht.x * W;
+      panY = state.ansicht.y * H;
+    }
+    ansichtAnwenden();
   }
   const ro = new ResizeObserver(() => {
     messen();
+    if (readOnly && !eingepasst && W > 1) {
+      eingepasst = true;
+      allesZeigen(false);
+    }
     state.items.forEach(positionieren);
     verbindungenZeichnen();
     inkZeichnen();
@@ -171,15 +194,24 @@ export function createBoard(container, cfg) {
     return { hw: (w * U * sc) / 2 / W, hh: (hh * U * sc) / 2 / H };
   }
 
+  /** Sichtbarer Ausschnitt in Weltkoordinaten (0…1 entspricht einer Bildschirmbreite bei Zoom 1). */
+  function sicht() {
+    const x0 = -panX / zoom / W;
+    const y0 = -panY / zoom / H;
+    return { x0, y0, x1: x0 + 1 / zoom, y1: y0 + 1 / zoom, mx: x0 + 0.5 / zoom, my: y0 + 0.5 / zoom };
+  }
+
+  // Elemente bleiben im sichtbaren Ausschnitt – mehr Platz gibt es durch Verschieben der Fläche.
   function festhalten(item, locker = false) {
+    const v = sicht();
     if (locker) {
-      item.x = clamp(item.x, -0.1, 1.25);
-      item.y = clamp(item.y, -0.1, 1.25);
+      item.x = clamp(item.x, v.x0 - 0.1 / zoom, v.x1 + 0.1 / zoom);
+      item.y = clamp(item.y, v.y0 - 0.1 / zoom, v.y1 + 0.1 / zoom);
       return;
     }
     const a = ausdehnung(item);
-    item.x = clamp(item.x, Math.min(0.5, a.hw * 0.6), Math.max(0.5, 1 - a.hw * 0.6));
-    item.y = clamp(item.y, Math.min(0.5, a.hh * 0.6), Math.max(0.5, 1 - a.hh * 0.6));
+    item.x = clamp(item.x, Math.min(v.mx, v.x0 + a.hw * 0.6), Math.max(v.mx, v.x1 - a.hw * 0.6));
+    item.y = clamp(item.y, Math.min(v.my, v.y0 + a.hh * 0.6), Math.max(v.my, v.y1 - a.hh * 0.6));
   }
 
   function sanftSetzen(item) {
@@ -196,17 +228,18 @@ export function createBoard(container, cfg) {
 
   /** Sucht einen freien Platz, möglichst weit weg von allem anderen. */
   function freierPlatz() {
-    let best = { x: 0.5, y: 0.5, d: -1 };
+    const v = sicht();
+    let best = { x: v.mx, y: v.my, d: -1 };
     for (let gx = 0; gx < 7; gx++) {
       for (let gy = 0; gy < 5; gy++) {
-        const x = 0.14 + (gx / 6) * 0.72 + (Math.random() - 0.5) * 0.04;
-        const y = 0.18 + (gy / 4) * 0.64 + (Math.random() - 0.5) * 0.04;
+        const x = v.x0 + (0.14 + (gx / 6) * 0.72 + (Math.random() - 0.5) * 0.04) / zoom;
+        const y = v.y0 + (0.18 + (gy / 4) * 0.64 + (Math.random() - 0.5) * 0.04) / zoom;
         let d = Infinity;
         for (const it of state.items) {
           if (it._neu || typ(it).unten) continue;
           d = Math.min(d, Math.hypot((it.x - x) * W, (it.y - y) * H));
         }
-        const zentrum = Math.hypot((x - 0.5) * W, (y - 0.5) * H) * 0.15;
+        const zentrum = Math.hypot((x - v.mx) * W, (y - v.my) * H) * 0.15;
         const score = (d === Infinity ? 10000 : d) - zentrum;
         if (score > best.d) best = { x, y, d: score };
       }
@@ -224,7 +257,7 @@ export function createBoard(container, cfg) {
       return or && drin(or.left + or.width / 2, or.top + or.height / 2);
     });
     const b = root.getBoundingClientRect();
-    const ink = state.ink.filter((st) => st.p.every(([x, y]) => drin(b.left + x * W, b.top + y * H)));
+    const ink = state.ink.filter((st) => st.p.every(([x, y]) => drin(b.left + sx(x), b.top + sy(y))));
     return { items, ink };
   }
 
@@ -246,15 +279,17 @@ export function createBoard(container, cfg) {
       },
       onMove({ dx, dy, dr, ds, count }) {
         if (item.fest) return; // festgemacht
-        item.x += dx / W;
-        item.y += dy / H;
+        const mx = dx / W / zoom;
+        const my = dy / H / zoom;
+        item.x += mx;
+        item.y += my;
         if (passagiere) {
           for (const p of passagiere.items) {
-            p.x += dx / W;
-            p.y += dy / H;
+            p.x += mx;
+            p.y += my;
             positionieren(p);
           }
-          for (const st of passagiere.ink) for (const pt of st.p) (pt[0] += dx / W), (pt[1] += dy / H);
+          for (const st of passagiere.ink) for (const pt of st.p) (pt[0] += mx), (pt[1] += my);
           if (passagiere.ink.length) inkZeichnen();
         }
         if (count > 1 && t.rotate) item.rot = ((item.rot || 0) + dr) % 360;
@@ -270,7 +305,7 @@ export function createBoard(container, cfg) {
         if (kuerzlichNeu) {
           delete item._neu;
           if (!moved) {
-            const p = t.unten ? { x: 0.5, y: 0.5 } : freierPlatz();
+            const p = t.unten ? { x: sicht().mx, y: sicht().my } : freierPlatz();
             item.x = p.x;
             item.y = p.y;
           }
@@ -321,11 +356,197 @@ export function createBoard(container, cfg) {
         return;
       }
     }
-    if (e.target === root || e.target === ebene || e.target === svg || e.target === hinweis) {
+    if (e.target.closest('.bitem, .btoolbar, .rotknob, .inkbar, .zoombar, .link-hint, .link-hit')) return;
+    flaecheGreifen(e);
+  });
+
+  // ---------- Fläche verschieben & zoomen ----------
+  // Ein Finger schiebt die Fläche, zwei Finger schieben und zoomen.
+  // Ein kurzer Tipp auf die leere Fläche hebt die Auswahl auf.
+  const flaechenFinger = new Map();
+  let flaechenGeste = null;
+
+  function flaecheGreifen(e) {
+    try {
+      root.setPointerCapture(e.pointerId);
+    } catch {
+      /* Zeiger bereits beendet */
+    }
+    flaechenFinger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (!flaechenGeste) flaechenGeste = { t0: performance.now(), weg: 0, start: [e.clientX, e.clientY] };
+    flaechenGeste.basis = fingerMitte();
+  }
+
+  function fingerMitte() {
+    const f = [...flaechenFinger.values()];
+    const x = f.reduce((a, p) => a + p.x, 0) / f.length;
+    const y = f.reduce((a, p) => a + p.y, 0) / f.length;
+    const d = f.length > 1 ? Math.hypot(f[0].x - f[1].x, f[0].y - f[1].y) : 0;
+    return { x, y, d, n: f.length };
+  }
+
+  root.addEventListener('pointermove', (e) => {
+    if (!flaechenFinger.has(e.pointerId)) return;
+    flaechenFinger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const g = flaechenGeste;
+    const neu = fingerMitte();
+    const alt = g.basis;
+    g.weg = Math.max(g.weg, Math.hypot(e.clientX - g.start[0], e.clientY - g.start[1]));
+    if (g.weg < 6 && neu.n === 1) return;
+    if (!g.bewegt) {
+      g.bewegt = true;
+      oben.classList.add('hidden');
+      root.classList.add('panning');
+    }
+    const r = root.getBoundingClientRect();
+    let z = zoom;
+    if (neu.n > 1 && alt.n > 1 && alt.d > 0) z = clamp(zoom * (neu.d / alt.d), ZOOM_MIN, ZOOM_MAX);
+    // Punkt unter der alten Fingermitte bleibt unter der neuen Fingermitte
+    const wx = (alt.x - r.left - panX) / zoom;
+    const wy = (alt.y - r.top - panY) / zoom;
+    zoom = z;
+    panX = neu.x - r.left - wx * zoom;
+    panY = neu.y - r.top - wy * zoom;
+    g.basis = neu;
+    ansichtAnwenden();
+  });
+
+  function flaecheLoslassen(e) {
+    if (!flaechenFinger.has(e.pointerId)) return;
+    flaechenFinger.delete(e.pointerId);
+    if (flaechenFinger.size) {
+      flaechenGeste.basis = fingerMitte();
+      return;
+    }
+    const g = flaechenGeste;
+    flaechenGeste = null;
+    root.classList.remove('panning');
+    oben.classList.remove('hidden');
+    if (g.bewegt) {
+      ansichtMerken();
+      toolbarZeichnen();
+    } else if (performance.now() - g.t0 < 500) {
       if (verbindeVon) verbindenAbbrechen();
       auswahlSetzen(null);
     }
-  });
+  }
+  root.addEventListener('pointerup', flaecheLoslassen);
+  root.addEventListener('pointercancel', flaecheLoslassen);
+
+  // Mausrad / Trackpad: scrollen verschiebt, mit Strg (bzw. Zwei-Finger-Zoom) wird gezoomt.
+  root.addEventListener(
+    'wheel',
+    (e) => {
+      if (e.target.closest('.tray, .btoolbar')) return;
+      e.preventDefault();
+      if (e.ctrlKey) {
+        const r = root.getBoundingClientRect();
+        zoomUm(zoom * Math.exp(-e.deltaY * 0.006), e.clientX - r.left, e.clientY - r.top);
+      } else {
+        panX -= e.deltaX;
+        panY -= e.deltaY;
+        ansichtAnwenden();
+      }
+      clearTimeout(radTimer);
+      oben.classList.add('hidden');
+      radTimer = setTimeout(() => {
+        oben.classList.remove('hidden');
+        ansichtMerken();
+        toolbarZeichnen();
+      }, 250);
+    },
+    { passive: false },
+  );
+  let radTimer = null;
+
+  /** Weltkoordinate → Bildschirm-Pixel (relativ zur Fläche). */
+  const sx = (x) => x * W * zoom + panX;
+  const sy = (y) => y * H * zoom + panY;
+
+  function ansichtAnwenden() {
+    welt.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+    const raster = 30 * zoom;
+    root.style.setProperty('--raster', raster + 'px');
+    root.style.setProperty('--raster-x', panX + 'px');
+    root.style.setProperty('--raster-y', panY + 'px');
+    if (zoomAnzeige) zoomAnzeige.textContent = Math.round(zoom * 100) + ' %';
+  }
+
+  function ansichtMerken() {
+    if (readOnly) return;
+    state.ansicht = { z: Math.round(zoom * 1000) / 1000, x: Math.round((panX / W) * 1e4) / 1e4, y: Math.round((panY / H) * 1e4) / 1e4 };
+    onChange();
+  }
+
+  function zoomUm(z, px, py) {
+    z = clamp(z, ZOOM_MIN, ZOOM_MAX);
+    panX = px - ((px - panX) / zoom) * z;
+    panY = py - ((py - panY) / zoom) * z;
+    zoom = z;
+    ansichtAnwenden();
+  }
+
+  function sanftAnsicht(fn) {
+    welt.classList.add('gleiten');
+    root.classList.add('gleiten');
+    fn();
+    toolbarZeichnen();
+    setTimeout(() => {
+      welt.classList.remove('gleiten');
+      root.classList.remove('gleiten');
+    }, 460);
+  }
+
+  /** Zoomt so, dass alles auf der Fläche zu sehen ist. */
+  function allesZeigen(merken = true) {
+    let x0 = Infinity;
+    let y0 = Infinity;
+    let x1 = -Infinity;
+    let y1 = -Infinity;
+    const dazu = (x, y) => {
+      x0 = Math.min(x0, x);
+      y0 = Math.min(y0, y);
+      x1 = Math.max(x1, x);
+      y1 = Math.max(y1, y);
+    };
+    for (const it of state.items) {
+      const [w, hh] = groesse(it);
+      const r = (Math.max(w, hh) * U * skalierung(it)) / 2;
+      dazu(it.x * W - r, it.y * H - r);
+      dazu(it.x * W + r, it.y * H + r);
+    }
+    for (const st of state.ink) for (const [x, y] of st.p) dazu(x * W, y * H);
+    if (x0 === Infinity) {
+      zoom = 1;
+      panX = 0;
+      panY = 0;
+    } else {
+      // Bei gleich großer Fläche wie am Anfang nicht zoomen
+      x0 = Math.min(x0, 0);
+      y0 = Math.min(y0, 0);
+      x1 = Math.max(x1, W);
+      y1 = Math.max(y1, H);
+      const rand = readOnly ? 12 : 30;
+      zoom = clamp(Math.min((W - 2 * rand) / (x1 - x0), (H - 2 * rand) / (y1 - y0), 1), ZOOM_MIN * (readOnly ? 0.5 : 1), 1);
+      panX = W / 2 - ((x0 + x1) / 2) * zoom;
+      panY = H / 2 - ((y0 + y1) / 2) * zoom;
+    }
+    ansichtAnwenden();
+    if (merken) ansichtMerken();
+  }
+
+  function zoomLeiste() {
+    const knopf = (ic, label, fn) => h('button', { class: 'tbtn', 'aria-label': label, onClick: fn }, icon(ic));
+    const mitte = (f) => sanftAnsicht(() => (zoomUm(zoom * f, W / 2, H / 2), ansichtMerken()));
+    zoomAnzeige = h('span', { class: 'zoom-wert' });
+    return h(
+      'div',
+      { class: 'zoombar glass' },
+      knopf('minus', 'Verkleinern', () => mitte(1 / 1.25)),
+      h('button', { class: 'tbtn zoom-alles', 'aria-label': 'Alles zeigen', onClick: () => sanftAnsicht(() => allesZeigen()) }, icon('expand'), zoomAnzeige),
+      knopf('plus', 'Vergrößern', () => mitte(1.25)),
+    );
+  }
 
   // ---------- Verbindungen ----------
   function verbinden(a, b) {
@@ -496,8 +717,8 @@ export function createBoard(container, cfg) {
       const a = state.items.find((i) => i.id === l.a);
       const b = state.items.find((i) => i.id === l.b);
       if (!a || !b) return;
-      ankerX = ((a.x + b.x) / 2) * W;
-      ankerOben = ((a.y + b.y) / 2) * H - 10;
+      ankerX = sx((a.x + b.x) / 2);
+      ankerOben = sy((a.y + b.y) / 2) - 10;
       ankerUnten = ankerOben + 20;
       eintraege = [
         {
@@ -529,11 +750,11 @@ export function createBoard(container, cfg) {
       if (!item) return;
       const [w, hh] = groesse(item);
       const sc = skalierung(item);
-      ankerX = item.x * W;
-      ankerOben = item.y * H - (hh * U * sc) / 2;
-      ankerUnten = item.y * H + (hh * U * sc) / 2 + (typ(item).label?.(item) ? 30 : 0);
+      ankerX = sx(item.x);
+      ankerOben = sy(item.y) - (hh * U * sc * zoom) / 2;
+      ankerUnten = sy(item.y) + (hh * U * sc * zoom) / 2 + (typ(item).label?.(item) ? 30 * zoom : 0);
       eintraege = menue ? menue.eintraege : toolbar(item, api);
-      if (typ(item).rotate) drehknopf(item, w * U * sc, hh * U * sc);
+      if (typ(item).rotate) drehknopf(item, w * U * sc * zoom, hh * U * sc * zoom);
     }
 
     const leiste = h('div', { class: 'btoolbar glass' });
@@ -594,8 +815,8 @@ export function createBoard(container, cfg) {
     // Der Knopf sitzt rechts neben dem Element und wandert beim Drehen mit.
     const r = Math.max(w, hh) / 2 + 30;
     const knopf = h('div', { class: 'rotknob glass' }, icon('rotate'));
-    const cx = item.x * W;
-    const cy = item.y * H;
+    const cx = sx(item.x);
+    const cy = sy(item.y);
     const setzen = () => {
       const rad = ((item.rot || 0) * Math.PI) / 180;
       knopf.style.left = cx + Math.cos(rad) * r + 'px';
@@ -651,9 +872,14 @@ export function createBoard(container, cfg) {
   const r4 = (n) => Math.round(n * 10000) / 10000;
   const r1 = (n) => Math.round(n * 10) / 10;
 
-  function brettPunkt(e) {
+  /** Bildschirmposition → Weltkoordinaten (0…1 bezogen auf die Flächengröße). */
+  function weltPunkt(e) {
     const r = root.getBoundingClientRect();
-    return [r4((e.clientX - r.left) / W), r4((e.clientY - r.top) / H)];
+    return [(e.clientX - r.left - panX) / zoom / W, (e.clientY - r.top - panY) / zoom / H];
+  }
+  function brettPunkt(e) {
+    const [x, y] = weltPunkt(e);
+    return [r4(x), r4(y)];
   }
 
   // Bereich eines Elements, in den man schreiben kann (Anteile: x, y, Breite, Höhe).
@@ -673,9 +899,9 @@ export function createBoard(container, cfg) {
     const wpx = w * U * bw;
     const hpx = hh * U * bh;
     const sc = skalierung(item);
-    const r = root.getBoundingClientRect();
-    const dx = e.clientX - r.left - item.x * W;
-    const dy = e.clientY - r.top - item.y * H;
+    const [wx, wy] = weltPunkt(e);
+    const dx = (wx - item.x) * W;
+    const dy = (wy - item.y) * H;
     const a = ((item.rot || 0) * Math.PI) / 180;
     const lx = (dx * Math.cos(a) + dy * Math.sin(a)) / sc + (w * U) / 2 - bx * w * U;
     const ly = (-dx * Math.sin(a) + dy * Math.cos(a)) / sc + (hh * U) / 2 - by * hh * U;
@@ -690,10 +916,10 @@ export function createBoard(container, cfg) {
   let letzterStift = 0;
 
   function radieren(e) {
-    const r = root.getBoundingClientRect();
-    const px = e.clientX - r.left;
-    const py = e.clientY - r.top;
-    const radius = Math.max(14, U * 2.2);
+    const [wx, wy] = weltPunkt(e);
+    const px = wx * W;
+    const py = wy * H;
+    const radius = Math.max(14, U * 2.2) / zoom;
     const vorher = state.ink.length;
     state.ink = state.ink.filter((st) => !st.p.some(([x, y]) => Math.hypot(x * W - px, y * H - py) < radius + (st.g * U) / 2));
     if (state.ink.length !== vorher) {
@@ -717,7 +943,7 @@ export function createBoard(container, cfg) {
   root.addEventListener(
     'pointerdown',
     (e) => {
-      if (readOnly || e.target.closest('.btoolbar, .rotknob, .inkbar, .link-hint')) return;
+      if (readOnly || e.target.closest('.btoolbar, .rotknob, .inkbar, .zoombar, .link-hint')) return;
       if (!zeichnetZeiger(e)) {
         // Handballen beim Schreiben ignorieren
         if (e.pointerType === 'touch' && (zeichnung || performance.now() - letzterStift < 350)) {
@@ -757,7 +983,7 @@ export function createBoard(container, cfg) {
         zeichnung = { ...basis, art: 'karte', strich, pfad };
       } else {
         if (!item) auswahlSetzen(null);
-        const strich = { id: uid(), farbe: stift.farbe, g: stift.dick ? 1.6 : 0.75, druck, p: [[...brettPunkt(e), druckVon(e)]] };
+        const strich = { id: uid(), farbe: stift.farbe, g: r4((stift.dick ? 1.6 : 0.75) / zoom), druck, p: [[...brettPunkt(e), druckVon(e)]] };
         const pfad = s('path', { fill: strich.farbe });
         inkSvg.append(pfad);
         zeichnung = { ...basis, art: 'brett', strich, pfad };
@@ -842,9 +1068,11 @@ export function createBoard(container, cfg) {
         onChange();
       },
     });
-    root.append(leiste.el);
+    root.append(leiste.el, zoomLeiste());
     root.classList.toggle('fingermode', stift.finger);
   }
+  if (state.ansicht) zoom = clamp(state.ansicht.z || 1, ZOOM_MIN, ZOOM_MAX);
+  ansichtAnwenden();
 
   // ---------- Öffentliche Schnittstelle ----------
   allesZeichnen();
@@ -870,12 +1098,10 @@ export function createBoard(container, cfg) {
       hist.push();
       item.id ||= uid();
       if (e) {
-        const rect = root.getBoundingClientRect();
-        item.x = (e.clientX - rect.left) / W;
-        item.y = (e.clientY - rect.top) / H;
+        [item.x, item.y] = weltPunkt(e);
         item._neu = true;
       } else {
-        const p = types[item.type].unten ? { x: 0.5, y: 0.5 } : freierPlatz();
+        const p = types[item.type].unten ? { x: sicht().mx, y: sicht().my } : freierPlatz();
         item.x ??= p.x;
         item.y ??= p.y;
       }
@@ -899,6 +1125,16 @@ export function createBoard(container, cfg) {
       hist.undo();
     },
     canUndo: () => hist.canUndo,
+    /** Alles auf der Fläche in den Blick holen. */
+    allesZeigen: () => sanftAnsicht(() => allesZeigen()),
+    /** Zurück zur Ausgangsansicht (Zoom 100 %, Mitte). */
+    ansichtZuruecksetzen() {
+      zoom = 1;
+      panX = 0;
+      panY = 0;
+      delete state.ansicht;
+      ansichtAnwenden();
+    },
     destroy() {
       ro.disconnect();
       root.remove();

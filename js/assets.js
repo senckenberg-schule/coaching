@@ -3,6 +3,7 @@
 
 let gefuehle = null;
 let symbole = null;
+let personen = [];
 
 async function json(url) {
   const res = await fetch(url, { cache: 'no-cache' });
@@ -18,20 +19,23 @@ function vorladen(urls) {
 }
 
 export async function loadAssets() {
-  const [g, s] = await Promise.all([
+  const [g, s, p] = await Promise.all([
     json('bilder/gefuehle/gefuehle.json'),
     json('bilder/symbole/symbole.json'),
+    json('bilder/personen/personen.json').catch(() => ({ personen: [] })),
   ]);
   gefuehle = {
     gruppen: g.gruppen,
     karten: g.karten.map((k) => ({ ...k, bild: 'bilder/gefuehle/' + k.bild })),
   };
   symbole = s.symbole.map((k) => ({ ...k, bild: 'bilder/symbole/' + k.bild }));
-  vorladen([...gefuehle.karten.map((k) => k.bild), ...symbole.map((k) => k.bild)]);
+  personen = p.personen.map((k) => ({ ...k, bild: 'bilder/personen/' + k.bild }));
+  vorladen([...gefuehle.karten, ...symbole, ...personen].map((k) => k.bild));
 }
 
 export const getGefuehle = () => gefuehle;
 export const getSymbole = () => symbole;
+export const getPersonen = () => personen;
 
 export function gefuehlById(id) {
   return gefuehle.karten.find((k) => k.id === id);

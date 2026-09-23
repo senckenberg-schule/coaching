@@ -4,7 +4,7 @@
 import { h, uid } from '../util.js';
 import { createBoard } from '../board.js';
 import { phaseById } from '../data.js';
-import { FIGUR_TYPE, SYMBOL_TYPE, figurToolbar, figurenTray, symboleTray, umbenennen, reiterLeiste } from './aktionsbrett.js';
+import { FIGUR_TYPE, SYMBOL_TYPE, PERSON_TYPE, figurToolbar, figurenTray, symboleTray, umbenennen, reiterLeiste } from './aktionsbrett.js';
 import { KARTE_TYPE, kartenToolbar, kartenTray, beschriften, ampelHintergrund, ampelZone } from './karten.js';
 import { GEFUEHL_TYPE, gefuehlToolbar, gefuehlStapel } from './gefuehle.js';
 import { SKALA_TYPE, skalaToolbar, skalaTray, frageSchreiben, neueSkala } from './skala-element.js';
@@ -22,6 +22,7 @@ import {
 const TYPES = {
   figur: FIGUR_TYPE,
   symbol: SYMBOL_TYPE,
+  person: PERSON_TYPE,
   karte: KARTE_TYPE,
   gefuehl: GEFUEHL_TYPE,
   skala: SKALA_TYPE,
@@ -147,7 +148,7 @@ export function flaecheMount(container, { state, readOnly = false, onChange = ()
     onDoubleTap: (it, api) => {
       if (it.type === 'karte') beschriften(it, api);
       else if (it.type === 'skala') frageSchreiben(it, api);
-      else if (it.type === 'figur' || it.type === 'symbol') umbenennen(it, api);
+      else if (it.type === 'figur' || it.type === 'symbol' || it.type === 'person') umbenennen(it, api);
     },
     toolbar: (it, api) => {
       if (it.type === 'karte') return kartenToolbar(it, api);
@@ -198,6 +199,7 @@ export function flaecheMount(container, { state, readOnly = false, onChange = ()
   // Liegt schon etwas da, wird nichts darübergelegt – dann aus der Seitenleiste holen.
   function autoElement(art, phaseId) {
     if (state.items.length || state.ink.length) return;
+    if (art) board.ansichtZuruecksetzen();
     const hat = (typ) => state.items.some((i) => i.type === typ);
     if (art === 'skala' && !hat('skala')) {
       board.addItem(neueSkala({ id: uid(), x: 0.5, y: 0.42, scale: 1.5, titel: phaseById(phaseId).skalaFrage }));
