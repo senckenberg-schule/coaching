@@ -24,6 +24,7 @@ const KERN = [
   'js/tools/index.js',
   'js/tools/aktionsbrett.js',
   'js/tools/skala.js',
+  'js/tools/skala-element.js',
   'js/tools/karten.js',
   'js/tools/gefuehle.js',
   'js/screens/home.js',

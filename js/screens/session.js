@@ -42,6 +42,11 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
   let werkzeug = null; // laufendes Werkzeug
   const speichern = () => store.touch(ses);
 
+  // Im Modus „durchgehend“ teilen sich alle Phasen dieselben Arbeitsflächen.
+  const bereich = () => (ses.durchgehend ? 'alle' : ses.phase);
+  const aktuellesWerkzeug = () => ses.tools[bereich()] || null;
+  const flaechenKey = (toolId) => `${bereich()}:${toolId}`;
+
   // ---------- Phasen ----------
   function themaSetzen() {
     document.body.className = 'theme-' + ses.phase;
@@ -97,7 +102,8 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
     themaSetzen();
     phasenleisteZeichnen();
     phaseIntro(phaseById(id));
-    buehneZeichnen();
+    // Durchgehende Arbeitsfläche bleibt einfach stehen – nur die Farben wechseln.
+    if (!ses.durchgehend || !werkzeug) buehneZeichnen();
   }
 
   // ---------- Bühne ----------
@@ -127,14 +133,14 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
     werkzeug = null;
 
     const p = phaseById(ses.phase);
-    const toolId = ses.tools[ses.phase];
+    const toolId = aktuellesWerkzeug();
     const platz = h('div', { class: 'stage-inner stage-enter' });
     buehne.append(platz);
 
     if (!toolId || !TOOL_IMPL[toolId]) {
       platz.append(phasenStart(p));
     } else {
-      const key = `${ses.phase}:${toolId}`;
+      const key = flaechenKey(toolId);
       ses.boards[key] ||= TOOL_IMPL[toolId].create(ses.phase);
       werkzeug = TOOL_IMPL[toolId].mount(platz, {
         state: ses.boards[key],
@@ -177,16 +183,18 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
     openCoach({
       ses,
       schueler,
-      aktuellesWerkzeug: () => ses.tools[ses.phase] || null,
+      aktuellesWerkzeug,
       phaseWechseln,
+      durchgehend: () => !!ses.durchgehend,
+      durchgehendSetzen,
       werkzeugWaehlen(id) {
-        ses.tools[ses.phase] = id;
+        ses.tools[bereich()] = id;
         speichern();
         buehneZeichnen();
       },
       momentFesthalten,
       async werkzeugLeeren() {
-        const id = ses.tools[ses.phase];
+        const id = aktuellesWerkzeug();
         if (!id) return;
         const ok = await confirmDialog({
           title: `${WERKZEUGE[id].name} leeren?`,
@@ -195,7 +203,7 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
           danger: true,
         });
         if (!ok) return;
-        ses.boards[`${ses.phase}:${id}`] = TOOL_IMPL[id].create(ses.phase);
+        ses.boards[flaechenKey(id)] = TOOL_IMPL[id].create(ses.phase);
         speichern();
         buehneZeichnen();
       },
@@ -214,10 +222,34 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
     });
   }
 
+  /** Modus wechseln, ohne dass sich die sichtbare Fläche ändert. */
+  function durchgehendSetzen(an) {
+    if (an === !!ses.durchgehend) return;
+    if (an) {
+      const tool = ses.tools[ses.phase] || null;
+      for (const id of Object.keys(TOOL_IMPL)) {
+        // Aktuelle Phase zuerst, sonst die späteste Phase mit Inhalt für dieses Werkzeug
+        const reihe = [ses.phase, ...PHASEN.map((p) => p.id).reverse()];
+        const quelle = reihe.map((ph) => ses.boards[`${ph}:${id}`]).find(Boolean);
+        if (quelle && (id === tool || !ses.boards[`alle:${id}`])) ses.boards[`alle:${id}`] = deepClone(quelle);
+      }
+      if (tool) ses.tools.alle = tool;
+    } else {
+      const tool = ses.tools.alle || null;
+      if (tool && ses.boards[`alle:${tool}`]) ses.boards[`${ses.phase}:${tool}`] = deepClone(ses.boards[`alle:${tool}`]);
+      if (tool) ses.tools[ses.phase] = tool;
+    }
+    ses.durchgehend = an;
+    store.setSetting('durchgehend', an);
+    speichern();
+    buehneZeichnen();
+    toast(an ? 'Die Arbeitsfläche bleibt jetzt in allen Phasen gleich' : 'Jede Phase hat jetzt wieder ihre eigene Fläche');
+  }
+
   function momentFesthalten(titel) {
-    const id = ses.tools[ses.phase];
+    const id = aktuellesWerkzeug();
     if (!id) return false;
-    const key = `${ses.phase}:${id}`;
+    const key = flaechenKey(id);
     ses.moments.push({
       id: uid(),
       createdAt: Date.now(),

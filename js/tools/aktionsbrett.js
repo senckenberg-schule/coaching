@@ -4,6 +4,7 @@ import { createBoard, trayItem } from '../board.js';
 import { FARBEN } from '../data.js';
 import { getSymbole } from '../assets.js';
 import { ask, segmented } from '../ui.js';
+import { SKALA_TYPE, skalaToolbar, skalaTray, frageSchreiben } from './skala-element.js';
 
 const TYPES = {
   figur: {
@@ -25,6 +26,7 @@ const TYPES = {
     },
     label: (it) => it.name,
   },
+  skala: SKALA_TYPE,
 };
 
 function figurElement(form, farbe) {
@@ -53,8 +55,9 @@ export default {
       onChange,
       onHistory,
       emptyHint: 'Ziehe Figuren und Symbole auf das Brett',
-      onDoubleTap: (it, api) => umbenennen(it, api),
+      onDoubleTap: (it, api) => (it.type === 'skala' ? frageSchreiben(it, api) : umbenennen(it, api)),
       toolbar(it, api) {
+        if (it.type === 'skala') return skalaToolbar(it, api, board);
         const liste = [{ icon: 'pencil', label: 'Name', onClick: () => umbenennen(it, api) }];
         if (it.type === 'figur') {
           liste.push(
@@ -117,6 +120,7 @@ function seitenleiste(board) {
     [
       { value: 'figuren', label: 'Figuren' },
       { value: 'symbole', label: 'Symbole' },
+      { value: 'skalen', label: 'Skalen' },
     ],
     reiter,
     (v) => {
@@ -168,6 +172,8 @@ function seitenleiste(board) {
           ),
         ),
       );
+    } else if (reiter === 'skalen') {
+      inhalt.append(skalaTray(board));
     } else {
       inhalt.append(
         h('p', { class: 'tray-hint' }, 'Symbole für Orte, Dinge, Hindernisse und Kraftquellen.'),

@@ -77,7 +77,7 @@ export const WERKZEUGE = {
     id: 'skala',
     name: 'Skala',
     icon: 'bilder/app/skala.svg',
-    info: 'Auf einer Treppe von 0 bis 10 Punkte setzen',
+    info: 'Skalen auf die Fläche ziehen und Punkte setzen',
   },
   aktionsbrett: {
     id: 'aktionsbrett',

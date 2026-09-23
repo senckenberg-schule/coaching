@@ -4,6 +4,8 @@ import { icon } from '../icons.js';
 import { createBoard, trayItem } from '../board.js';
 import { FARBEN } from '../data.js';
 import { schreibfeld, karteInkSvg } from '../ink.js';
+import { segmented } from '../ui.js';
+import { SKALA_TYPE, skalaToolbar, skalaTray, frageSchreiben } from './skala-element.js';
 
 const FORMEN = {
   rechteckig: { name: 'rechteckig', size: [21, 13.5] },
@@ -47,6 +49,7 @@ const TYPES = {
       inner.append(karteElement(it.form, it.farbe, it.text, it.ink));
     },
   },
+  skala: SKALA_TYPE,
 };
 
 export default {
@@ -79,10 +82,11 @@ export default {
       onHistory,
       emptyHint: 'Ziehe eine Karte auf die Fläche und beschrifte sie',
       onPlaced: (it) => {
-        if (!it.text && !it.ink?.striche?.length) beschriften(it, board.api);
+        if (it.type === 'karte' && !it.text && !it.ink?.striche?.length) beschriften(it, board.api);
       },
-      onDoubleTap: (it, api) => beschriften(it, api),
+      onDoubleTap: (it, api) => (it.type === 'skala' ? frageSchreiben(it, api) : beschriften(it, api)),
       toolbar(it, api) {
+        if (it.type === 'skala') return skalaToolbar(it, api, board);
         return [
           { icon: 'pencil', label: 'Schreiben', onClick: () => beschriften(it, api) },
           {
@@ -128,10 +132,29 @@ export default {
 function seitenleiste(board) {
   const tray = h('div', { class: 'tray glass' });
   let farbe = FARBEN[2];
+  let reiter = 'karten';
   const inhalt = h('div', { class: 'tray-content' });
-  tray.append(inhalt);
+  const tabs = segmented(
+    [
+      { value: 'karten', label: 'Karten' },
+      { value: 'skalen', label: 'Skalen' },
+    ],
+    reiter,
+    (v) => {
+      reiter = v;
+      zeichnen();
+    },
+  );
+  tray.append(tabs, inhalt);
 
   function zeichnen() {
+    inhalt.classList.remove('swap');
+    void inhalt.offsetWidth;
+    inhalt.classList.add('swap');
+    if (reiter === 'skalen') {
+      inhalt.replaceChildren(skalaTray(board));
+      return;
+    }
     inhalt.replaceChildren(
       h('h3', null, 'Neue Karte'),
       h('p', { class: 'tray-hint' }, 'Tippe oder ziehe eine Karte auf die Fläche.'),

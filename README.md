@@ -15,7 +15,7 @@ Das Coaching folgt dem **4-Phasen-Modell**:
 ## Werkzeuge
 
 - **Gefühle** – 20 Gefühlskarten (nach Grundgefühl sortiert) aufs Brett legen, die Stärke einschätzen (ein bisschen / mittel / sehr).
-- **Skala** – eine Treppe von 0 bis 10. Punkte wie „Heute“, „Ziel“, „Nächster Schritt“ oder eigene Punkte darauf ziehen. Wahlweise mit Zahlen oder Gesichtern.
+- **Skala** – Skalen von 0 bis 10 als Elemente auf der Fläche, beliebig viele und frei kombinierbar (verschieben, drehen – z. B. senkrecht –, vergrößern). Punkte wie „Heute“, „Ziel“, „Nächster Schritt“ oder eigene Punkte auf eine Skala ziehen; zum Löschen weit wegziehen. Die Frage schreibt man mit dem Stift oben auf die Skala. Wahlweise mit Zahlen oder Gesichtern. Skalen gibt es auch im Aktionsbrett und bei den Karten.
 - **Aktionsbrett** – Figuren (rund/eckig, groß/klein, 10 Farben) mit Augen für die Blickrichtung, dazu Symbole (Zuhause, Schule, Stein, Stern …). Figuren lassen sich benennen und drehen.
 - **Karten** – Methodenkarten in rechteckig, rund oder oval, **mit dem Apple Pencil (oder Finger) beschriftet**, mit Linien verbindbar.
 
@@ -28,6 +28,7 @@ Das Coaching folgt dem **4-Phasen-Modell**:
 - Antippen zeigt eine kleine Leiste zum Benennen, Umfärben, Drehen und Löschen.
 - Oben rechts: **Rückgängig**.
 - **Coach-Bereich:** Das Coach-Symbol oben links **gedrückt halten**. Dort: Phase wechseln, Werkzeug wählen, Leitfragen, Momente festhalten und vergleichen, Notizen, Sitzung beenden.
+- **Arbeitsfläche über alle Phasen behalten:** Schalter im Coach-Bereich. Dann bleibt beim Phasenwechsel alles liegen, nur die Farben wechseln. Die letzte Wahl gilt auch für neue Sitzungen.
 - **Momente** sind Zwischenstände, z. B. „So ist es jetzt“ und „So soll es sein“. Zwei Momente lassen sich nebeneinander vergleichen.
 
 ## Datenschutz und Speicherung

@@ -111,7 +111,7 @@ export function createBoard(container, cfg) {
     if (!e) return;
     const t = typ(item);
     e.inner.replaceChildren();
-    t.render(item, e.inner);
+    t.render(item, e.inner, { api, readOnly });
     e.el.style.setProperty('--sel-radius', t.radius ? t.radius(item) : '20%');
     const text = t.label ? t.label(item) : '';
     e.label.textContent = text || '';
@@ -372,6 +372,15 @@ export function createBoard(container, cfg) {
   }
 
   const api = {
+    /** Zustand vor einer Änderung merken (für Rückgängig). */
+    capture: () => hist.capture(),
+    /** Änderung abschließen, die ein Element selbst vorgenommen hat. */
+    commit(item, vorher) {
+      hist.push(vorher);
+      inhaltZeichnen(item);
+      toolbarZeichnen();
+      onChange();
+    },
     change(item, fn) {
       hist.push();
       fn();
@@ -575,21 +584,33 @@ export function createBoard(container, cfg) {
     return [r4((e.clientX - r.left) / W), r4((e.clientY - r.top) / H)];
   }
 
-  /** Fingerposition im Koordinatensystem der Handschrift einer Karte (mit Drehung). */
+  // Bereich eines Elements, in den man schreiben kann (Anteile: x, y, Breite, Höhe).
+  const schreibBereich = (item) => typ(item).inkBereich?.(item) || [0, 0, 1, 1];
+  function neueHandschrift(item) {
+    const seiten = typ(item).inkSeiten?.(item);
+    if (seiten) return { vw: seiten[0], vh: seiten[1], striche: [] };
+    const [w, hh] = groesse(item);
+    const [, , bw, bh] = schreibBereich(item);
+    return { vw: 1000, vh: Math.round((1000 * hh * bh) / (w * bw)), striche: [] };
+  }
+
+  /** Fingerposition im Koordinatensystem der Handschrift eines Elements (mit Drehung). */
   function kartenPunkt(item, e) {
     const [w, hh] = groesse(item);
-    const wpx = w * U;
-    const hpx = hh * U;
+    const [bx, by, bw, bh] = schreibBereich(item);
+    const wpx = w * U * bw;
+    const hpx = hh * U * bh;
     const sc = skalierung(item);
     const r = root.getBoundingClientRect();
     const dx = e.clientX - r.left - item.x * W;
     const dy = e.clientY - r.top - item.y * H;
     const a = ((item.rot || 0) * Math.PI) / 180;
-    const lx = (dx * Math.cos(a) + dy * Math.sin(a)) / sc + wpx / 2;
-    const ly = (-dx * Math.sin(a) + dy * Math.cos(a)) / sc + hpx / 2;
-    const f = Math.min(wpx / item.ink.vw, hpx / item.ink.vh);
-    const ox = (wpx - item.ink.vw * f) / 2;
-    const oy = (hpx - item.ink.vh * f) / 2;
+    const lx = (dx * Math.cos(a) + dy * Math.sin(a)) / sc + (w * U) / 2 - bx * w * U;
+    const ly = (-dx * Math.sin(a) + dy * Math.cos(a)) / sc + (hh * U) / 2 - by * hh * U;
+    const ink = item.ink || neueHandschrift(item);
+    const f = Math.min(wpx / ink.vw, hpx / ink.vh);
+    const ox = (wpx - ink.vw * f) / 2;
+    const oy = (hpx - ink.vh * f) / 2;
     return { x: r1((lx - ox) / f), y: r1((ly - oy) / f), drin: lx >= 0 && lx <= wpx && ly >= 0 && ly <= hpx, f: f * sc };
   }
 
@@ -650,11 +671,8 @@ export function createBoard(container, cfg) {
         return;
       }
       const druck = e.pointerType === 'pen';
-      if (item && typ(item).schreibbar) {
-        if (!item.ink) {
-          const [w, hh] = groesse(item);
-          item.ink = { vw: 1000, vh: Math.round((1000 * hh) / w), striche: [] };
-        }
+      if (item && typ(item).schreibbar && kartenPunkt(item, e).drin) {
+        item.ink ||= neueHandschrift(item);
         let flaeche = els.get(item.id).inner.querySelector('.karte-ink');
         if (!flaeche) {
           inhaltZeichnen(item);
@@ -761,6 +779,11 @@ export function createBoard(container, cfg) {
 
   return {
     root,
+    items: () => state.items,
+    get auswahlId() {
+      return auswahl?.kind === 'item' ? auswahl.id : null;
+    },
+    elementVon: (id) => els.get(id)?.el,
     /** Neues Element hinzufügen – optional direkt mit dem Finger weiterziehen. */
     addItem(item, e) {
       hist.push();

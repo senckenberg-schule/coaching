@@ -79,7 +79,7 @@ export function openCoach(ctx) {
       ),
 
       abschnitt(
-        `Werkzeug für „${p.name}“`,
+        ctx.durchgehend() ? 'Werkzeug (für alle Phasen)' : `Werkzeug für „${p.name}“`,
         h(
           'div',
           { class: 'dr-tools' },
@@ -129,6 +129,35 @@ export function openCoach(ctx) {
               `${WERKZEUGE[aktuell].name} leeren`,
             )
           : null,
+      ),
+
+      abschnitt(
+        'Arbeitsfläche',
+        h(
+          'button',
+          {
+            class: 'dr-switch' + (ctx.durchgehend() ? ' on' : ''),
+            role: 'switch',
+            'aria-checked': String(ctx.durchgehend()),
+            onClick: () => {
+              ctx.durchgehendSetzen(!ctx.durchgehend());
+              zeichnen();
+            },
+          },
+          h(
+            'span',
+            { class: 'sw-text' },
+            h('b', null, 'Über alle Phasen behalten'),
+            h(
+              'small',
+              null,
+              ctx.durchgehend()
+                ? 'Beim Phasenwechsel bleibt alles liegen, nur die Farben wechseln.'
+                : 'Jede Phase hat ihre eigene Fläche.',
+            ),
+          ),
+          h('span', { class: 'sw-track' }, h('i')),
+        ),
       ),
 
       abschnitt(

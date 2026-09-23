@@ -6,7 +6,7 @@ import { PHASEN } from './data.js';
 const KEY = 'coaching-app-v1';
 
 function leer() {
-  return { version: 1, students: [], sessions: [] };
+  return { version: 1, students: [], sessions: [], settings: {} };
 }
 
 function laden() {
@@ -16,6 +16,7 @@ function laden() {
     const db = JSON.parse(raw);
     db.students ||= [];
     db.sessions ||= [];
+    db.settings ||= {};
     return db;
   } catch {
     return leer();
@@ -48,6 +49,17 @@ export const store = {
 
   saveNow() {
     schreibenSpaeter.flush();
+  },
+
+  // ---- Einstellungen (gelten für neue Sitzungen) ----
+  setting(key) {
+    return db.settings?.[key];
+  },
+
+  setSetting(key, value) {
+    db.settings ||= {};
+    db.settings[key] = value;
+    this.save();
   },
 
   // ---- Schülerinnen und Schüler ----
@@ -101,6 +113,8 @@ export const store = {
       notes: '',
       moments: [],
       finished: false,
+      // Arbeitsfläche über alle Phasen behalten (letzte Wahl wird übernommen)
+      durchgehend: !!db.settings?.durchgehend,
     };
     db.sessions.push(ses);
     this.save();
