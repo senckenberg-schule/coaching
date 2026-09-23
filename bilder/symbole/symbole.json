@@ -1,0 +1,18 @@
+{
+  "symbole": [
+    { "id": "stern", "name": "Stern", "bild": "stern.svg" },
+    { "id": "herz", "name": "Herz", "bild": "herz.svg" },
+    { "id": "sonne", "name": "Sonne", "bild": "sonne.svg" },
+    { "id": "stein", "name": "Stein", "bild": "stein.svg" },
+    { "id": "blitz", "name": "Blitz", "bild": "blitz.svg" },
+    { "id": "ziel", "name": "Ziel", "bild": "ziel.svg" },
+    { "id": "zuhause", "name": "Zuhause", "bild": "zuhause.svg" },
+    { "id": "schule", "name": "Schule", "bild": "schule.svg" },
+    { "id": "ball", "name": "Sport", "bild": "ball.svg" },
+    { "id": "musik", "name": "Musik", "bild": "musik.svg" },
+    { "id": "buch", "name": "Buch", "bild": "buch.svg" },
+    { "id": "handy", "name": "Handy", "bild": "handy.svg" },
+    { "id": "hund", "name": "Tier", "bild": "hund.svg" },
+    { "id": "baum", "name": "Natur", "bild": "baum.svg" }
+  ]
+}

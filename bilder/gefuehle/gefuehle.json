@@ -1,0 +1,32 @@
+{
+  "gruppen": [
+    { "id": "freude", "name": "Freude", "farbe": "#f5b400" },
+    { "id": "ueberraschung", "name": "Überraschung", "farbe": "#15aabf" },
+    { "id": "trauer", "name": "Trauer", "farbe": "#4c6ef5" },
+    { "id": "wut", "name": "Wut", "farbe": "#f03e3e" },
+    { "id": "angst", "name": "Angst", "farbe": "#8d6cf5" },
+    { "id": "scham", "name": "Scham", "farbe": "#e64980" }
+  ],
+  "karten": [
+    { "id": "froehlich", "name": "fröhlich", "bild": "froehlich.svg", "gruppe": "freude" },
+    { "id": "gluecklich", "name": "glücklich", "bild": "gluecklich.svg", "gruppe": "freude" },
+    { "id": "stolz", "name": "stolz", "bild": "stolz.svg", "gruppe": "freude" },
+    { "id": "begeistert", "name": "begeistert", "bild": "begeistert.svg", "gruppe": "freude" },
+    { "id": "geliebt", "name": "geliebt", "bild": "geliebt.svg", "gruppe": "freude" },
+    { "id": "entspannt", "name": "entspannt", "bild": "entspannt.svg", "gruppe": "freude" },
+    { "id": "neugierig", "name": "neugierig", "bild": "neugierig.svg", "gruppe": "freude" },
+    { "id": "mutig", "name": "mutig", "bild": "mutig.svg", "gruppe": "freude" },
+    { "id": "ueberrascht", "name": "überrascht", "bild": "ueberrascht.svg", "gruppe": "ueberraschung" },
+    { "id": "traurig", "name": "traurig", "bild": "traurig.svg", "gruppe": "trauer" },
+    { "id": "einsam", "name": "einsam", "bild": "einsam.svg", "gruppe": "trauer" },
+    { "id": "enttaeuscht", "name": "enttäuscht", "bild": "enttaeuscht.svg", "gruppe": "trauer" },
+    { "id": "gelangweilt", "name": "gelangweilt", "bild": "gelangweilt.svg", "gruppe": "trauer" },
+    { "id": "wuetend", "name": "wütend", "bild": "wuetend.svg", "gruppe": "wut" },
+    { "id": "genervt", "name": "genervt", "bild": "genervt.svg", "gruppe": "wut" },
+    { "id": "aengstlich", "name": "ängstlich", "bild": "aengstlich.svg", "gruppe": "angst" },
+    { "id": "nervoes", "name": "nervös", "bild": "nervoes.svg", "gruppe": "angst" },
+    { "id": "unsicher", "name": "unsicher", "bild": "unsicher.svg", "gruppe": "angst" },
+    { "id": "ueberfordert", "name": "überfordert", "bild": "ueberfordert.svg", "gruppe": "angst" },
+    { "id": "verlegen", "name": "verlegen", "bild": "verlegen.svg", "gruppe": "scham" }
+  ]
+}
