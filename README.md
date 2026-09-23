@@ -85,6 +85,10 @@ bilder/
 
 Texte wie Leitfragen, Phasenfragen und Farben stehen in `js/data.js`.
 
+## Handbuch
+
+Im Ordner `dokumentation/` liegen das Handbuch mit Abbildungen (`handbuch.html`, als PDF: `Handbuch-Coaching-App.pdf`), die Screenshots in voller Auflösung (`screenshots/`) und verkleinerte Bilder für Web und PDF (`bilder/`). Alle Namen in den Abbildungen sind erfunden.
+
 ## Aufbau des Codes
 
 ```
