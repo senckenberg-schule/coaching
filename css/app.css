@@ -521,7 +521,7 @@ input, textarea {
 .board-links { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .board-items, .board-over { position: absolute; inset: 0; pointer-events: none; }
 .board-items { z-index: 1; }
-.board-over { z-index: 2; }
+.board-over { z-index: 3; }
 .board-items > *, .board-over > * { pointer-events: auto; }
 .board-over.hidden > * { opacity: 0; pointer-events: none; }
 
@@ -665,6 +665,64 @@ input, textarea {
 .link.selected .link-line { stroke: var(--accent); }
 @keyframes dashDraw { from { opacity: 0; } }
 
+/* ---------- Zeichnen mit dem Stift ---------- */
+.board-ink { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 2; }
+.board.fingermode { box-shadow: var(--glass-shadow), var(--glass-inset), inset 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
+.inkbar {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 6px;
+  border-radius: 999px;
+  background: var(--glass-strong);
+  animation: tbIn 0.45s var(--spring) 0.15s both;
+}
+.inkbar .tbtn { min-width: 42px; height: 42px; padding: 0 10px; }
+.ink-badge { width: 32px; height: 32px; display: grid; place-items: center; color: var(--accent); }
+.ink-dots { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.ink-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--f);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s var(--spring), box-shadow 0.3s;
+}
+.ink-dot:active { transform: scale(0.85); }
+.ink-dot.active { transform: scale(1.18); box-shadow: 0 0 0 2.5px var(--f), 0 3px 8px rgba(0, 0, 0, 0.2); }
+.ink-sep { width: 1px; height: 26px; margin: 0 4px; background: rgba(29, 35, 64, 0.15); }
+.dicke-strich { display: inline-block; width: 18px; height: 3px; border-radius: 2px; background: currentColor; transition: height 0.25s; }
+.dicke-strich.dick { height: 7px; border-radius: 4px; }
+.tbtn.dicke { gap: 8px; background: rgba(255, 255, 255, 0.6); }
+.tbtn.dicke.active { background: var(--ink); }
+@media (max-width: 700px) { .inkbar .ink-dot:nth-of-type(n + 5) { display: none; } }
+
+/* Schreibfeld für Karten */
+.sheet-pad { max-width: 980px; }
+.pad-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.karte.pad {
+  position: relative;
+  inset: auto;
+  flex: none;
+  padding: 0;
+  touch-action: none;
+  cursor: crosshair;
+  box-shadow: 0 16px 36px rgba(30, 40, 90, 0.18), inset 0 2px 4px rgba(255, 255, 255, 0.8), inset 0 -3px 8px color-mix(in srgb, var(--c) 25%, transparent);
+  --u: 8px;
+}
+.pad-ink { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.pad-leer { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 22px; font-weight: 700; color: color-mix(in srgb, var(--ink) 40%, transparent); pointer-events: none; transition: opacity 0.3s; }
+.pad-leer .ico { width: 30px; height: 30px; }
+.pad-leer.weg { opacity: 0; }
+.pad-actions { width: 100%; justify-content: center; }
+.gbtn:disabled { opacity: 0.4; pointer-events: none; }
+
 /* ---------- Aktionsbrett ---------- */
 .figur {
   position: absolute;
@@ -713,6 +771,10 @@ input, textarea {
 .karte.rund, .karte.oval { border-radius: 50%; padding: 12% 14%; }
 .karte-text { font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; color: var(--ink); }
 .karte-text.leer { opacity: 0.35; }
+.karte { overflow: hidden; }
+.karte-ink { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.karte-leer { display: grid; place-items: center; opacity: 0.35; color: var(--ink); }
+.karte-leer .ico { width: calc(var(--u) * 4); height: calc(var(--u) * 4); }
 .card-preview { width: 100%; display: flex; align-items: center; gap: 14px; padding: 4px 6px; font-weight: 700; color: var(--ink-2); }
 .card-preview .karte { position: relative; inset: auto; flex: none; --u: 3px; }
 .card-preview.rechteckig .karte { width: 64px; height: 42px; border-radius: 10px; }

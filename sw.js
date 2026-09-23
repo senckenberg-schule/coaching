@@ -19,6 +19,8 @@ const KERN = [
   'js/gestures.js',
   'js/history.js',
   'js/board.js',
+  'js/ink.js',
+  'js/vendor/perfect-freehand.js',
   'js/tools/index.js',
   'js/tools/aktionsbrett.js',
   'js/tools/skala.js',

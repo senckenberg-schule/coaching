@@ -17,11 +17,14 @@ Das Coaching folgt dem **4-Phasen-Modell**:
 - **Gefühle** – 20 Gefühlskarten (nach Grundgefühl sortiert) aufs Brett legen, die Stärke einschätzen (ein bisschen / mittel / sehr).
 - **Skala** – eine Treppe von 0 bis 10. Punkte wie „Heute“, „Ziel“, „Nächster Schritt“ oder eigene Punkte darauf ziehen. Wahlweise mit Zahlen oder Gesichtern.
 - **Aktionsbrett** – Figuren (rund/eckig, groß/klein, 10 Farben) mit Augen für die Blickrichtung, dazu Symbole (Zuhause, Schule, Stein, Stern …). Figuren lassen sich benennen und drehen.
-- **Karten** – Methodenkarten in rechteckig, rund oder oval, frei beschriftbar (auch mit dem Apple Pencil), mit Linien verbindbar.
+- **Karten** – Methodenkarten in rechteckig, rund oder oval, **mit dem Apple Pencil (oder Finger) beschriftet**, mit Linien verbindbar.
 
 ## Bedienung
 
 - **Ein Finger** verschiebt, **zwei Finger** drehen (und bei Karten und Symbolen: vergrößern). Mehrere Dinge lassen sich gleichzeitig bewegen.
+- **Apple Pencil:** Der Stift zeichnet auf der Arbeitsfläche (Aktionsbrett, Gefühle, Karten), die Finger verschieben weiterhin. Die Stiftleiste unten links bietet Farben, dünn/dick, Radierer, Zeichnung löschen und den Modus **„Finger malt“** (falls kein Stift da ist).
+- **Karten beschriften:** Beim Anlegen einer Karte öffnet sich ein großes Schreibfeld in Form der Karte. Man kann auch mit dem Stift direkt auf eine Karte auf der Fläche schreiben. Zweimal tippen öffnet das Schreibfeld erneut.
+- Kurz mit dem Stift auf eine Figur oder ein Gefühl tippen wählt es aus.
 - Antippen zeigt eine kleine Leiste zum Benennen, Umfärben, Drehen und Löschen.
 - Oben rechts: **Rückgängig**.
 - **Coach-Bereich:** Das Coach-Symbol oben links **gedrückt halten**. Dort: Phase wechseln, Werkzeug wählen, Leitfragen, Momente festhalten und vergleichen, Notizen, Sitzung beenden.
@@ -95,6 +98,10 @@ sw.js                 Offline-Modus
 - Verlauf der Skala über mehrere Sitzungen
 - Sitzungsprotokoll als PDF
 - Bedürfniskarten als Ergänzung zu den Gefühlskarten
+
+## Verwendete Bibliothek
+
+Weiche, druckempfindliche Stiftstriche: [perfect-freehand](https://github.com/steveruizok/perfect-freehand) (MIT-Lizenz), liegt in `js/vendor/`.
 
 ## Bildnachweis
 

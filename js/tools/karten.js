@@ -1,8 +1,9 @@
-// Methodenkarten: rechteckig, rund oder oval – frei beschriften, legen und verbinden.
+// Methodenkarten: rechteckig, rund oder oval – mit dem Stift beschriften, legen und verbinden.
 import { h } from '../util.js';
+import { icon } from '../icons.js';
 import { createBoard, trayItem } from '../board.js';
 import { FARBEN } from '../data.js';
-import { ask } from '../ui.js';
+import { schreibfeld, karteInkSvg } from '../ink.js';
 
 const FORMEN = {
   rechteckig: { name: 'rechteckig', size: [21, 13.5] },
@@ -20,15 +21,17 @@ function schriftgroesse(text) {
   return 1.25;
 }
 
-function karteElement(form, farbe, text) {
+function karteElement(form, farbe, text, ink) {
+  const hatSchrift = ink?.striche?.length > 0;
   return h(
     'div',
     { class: `karte ${form}`, style: { '--c': farbe } },
-    h(
-      'span',
-      { class: 'karte-text' + (text ? '' : ' leer'), style: { fontSize: `calc(var(--u) * ${schriftgroesse(text)})` } },
-      text || '…',
-    ),
+    // Ältere, getippte Karten zeigen ihren Text
+    text
+      ? h('span', { class: 'karte-text', style: { fontSize: `calc(var(--u) * ${schriftgroesse(text)})` } }, text)
+      : null,
+    !hatSchrift && !text ? h('span', { class: 'karte-leer' }, icon('pencil')) : null,
+    ink ? karteInkSvg(ink) : null,
   );
 }
 
@@ -38,8 +41,10 @@ const TYPES = {
     rotate: true,
     scale: true,
     radius: (it) => (it.form === 'rechteckig' ? 'calc(var(--u) * 2.2)' : '50%'),
+    // Mit dem Stift direkt auf die Karte schreiben
+    schreibbar: true,
     render(it, inner) {
-      inner.append(karteElement(it.form, it.farbe, it.text));
+      inner.append(karteElement(it.form, it.farbe, it.text, it.ink));
     },
   },
 };
@@ -56,13 +61,13 @@ export default {
     container.append(wrap);
 
     async function beschriften(it, api) {
-      const text = await ask({
-        title: 'Was steht auf der Karte?',
-        value: it.text || '',
-        placeholder: 'Schreibe oder sprich hier …',
-        multiline: true,
+      const [w, hh] = FORMEN[it.form]?.size || FORMEN.rechteckig.size;
+      const ink = await schreibfeld({ form: it.form, farbe: it.farbe, ink: it.ink, seitenverhaeltnis: hh / w });
+      if (!ink) return;
+      api.change(it, () => {
+        it.ink = ink;
+        if (ink.striche.length) it.text = '';
       });
-      if (text !== null && text !== it.text) api.change(it, () => (it.text = text));
     }
 
     const board = createBoard(main, {
@@ -74,12 +79,12 @@ export default {
       onHistory,
       emptyHint: 'Ziehe eine Karte auf die Fläche und beschrifte sie',
       onPlaced: (it) => {
-        if (!it.text) beschriften(it, board.api);
+        if (!it.text && !it.ink?.striche?.length) beschriften(it, board.api);
       },
       onDoubleTap: (it, api) => beschriften(it, api),
       toolbar(it, api) {
         return [
-          { icon: 'pencil', label: 'Text', onClick: () => beschriften(it, api) },
+          { icon: 'pencil', label: 'Schreiben', onClick: () => beschriften(it, api) },
           {
             icon: 'palette',
             label: 'Farbe',
@@ -135,7 +140,7 @@ function seitenleiste(board) {
         { class: 'tray-grid cards' },
         FORM_REIHE.map((form) =>
           trayItem(
-            h('div', { class: 'card-preview ' + form }, karteElement(form, farbe, ''), h('span', null, FORMEN[form].name)),
+            h('div', { class: 'card-preview ' + form }, karteElement(form, farbe), h('span', null, FORMEN[form].name)),
             (e) => board.addItem({ type: 'karte', form, farbe, text: '', rot: 0, scale: 1 }, e),
           ),
         ),
@@ -160,7 +165,7 @@ function seitenleiste(board) {
         'div',
         { class: 'tray-tipp' },
         h('b', null, 'Tipp: '),
-        'Mit zwei Fingern drehen und vergrößern. Zweimal tippen zum Beschriften.',
+        'Mit dem Stift direkt auf eine Karte schreiben – oder zweimal tippen für das große Schreibfeld. Mit zwei Fingern drehen und vergrößern.',
       ),
     );
   }

@@ -5,6 +5,8 @@ import { h, s, uid, clamp } from './util.js';
 import { icon } from './icons.js';
 import { attachGesture } from './gestures.js';
 import { createHistory } from './history.js';
+import { confirmDialog } from './ui.js';
+import { stift, zeichnetZeiger, strichD, ereignisPunkte, druckVon, stiftleiste, kartenStiftGroesse } from './ink.js';
 
 export function createBoard(container, cfg) {
   const {
@@ -21,13 +23,15 @@ export function createBoard(container, cfg) {
   } = cfg;
   state.items ||= [];
   state.links ||= [];
+  state.ink ||= [];
 
   const root = h('div', { class: 'board' + (readOnly ? ' readonly' : '') });
   const svg = s('svg', { class: 'board-links' });
   const ebene = h('div', { class: 'board-items' });
+  const inkSvg = s('svg', { class: 'board-ink' });
   const oben = h('div', { class: 'board-over' });
   const hinweis = h('div', { class: 'board-empty' }, emptyHint);
-  root.append(hinweis, svg, ebene, oben);
+  root.append(hinweis, svg, ebene, inkSvg, oben);
   container.append(root);
 
   let W = 1;
@@ -42,10 +46,11 @@ export function createBoard(container, cfg) {
   let zZaehler = 1;
 
   const hist = createHistory(
-    () => ({ items: state.items, links: state.links }),
+    () => ({ items: state.items, links: state.links, ink: state.ink }),
     (s) => {
       state.items = s.items;
       state.links = s.links;
+      state.ink = s.ink || [];
       allesZeichnen();
       onChange();
     },
@@ -59,11 +64,13 @@ export function createBoard(container, cfg) {
     U = Math.min(W, H) / 100;
     root.style.setProperty('--u', U + 'px');
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    inkSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   }
   const ro = new ResizeObserver(() => {
     messen();
     state.items.forEach(positionieren);
     verbindungenZeichnen();
+    inkZeichnen();
     toolbarZeichnen();
   });
   ro.observe(root);
@@ -86,6 +93,7 @@ export function createBoard(container, cfg) {
     const label = h('div', { class: 'bitem-label' });
     body.append(inner);
     el.append(body, label);
+    el.dataset.id = item.id;
     const eintrag = { el, body, inner, label, gesture: null };
     els.set(item.id, eintrag);
     inhaltZeichnen(item);
@@ -125,12 +133,13 @@ export function createBoard(container, cfg) {
     els.clear();
     state.items.forEach((it) => elementBauen(it));
     verbindungenZeichnen();
+    inkZeichnen();
     auswahlSetzen(null);
     hinweisAktualisieren();
   }
 
   function hinweisAktualisieren() {
-    hinweis.classList.toggle('show', !!emptyHint && state.items.length === 0 && !readOnly);
+    hinweis.classList.toggle('show', !!emptyHint && state.items.length === 0 && state.ink.length === 0 && !readOnly);
   }
 
   // Nach vorne holen über z-index – das Element im DOM zu verschieben
@@ -548,6 +557,203 @@ export function createBoard(container, cfg) {
     knopf.addEventListener('pointerup', ende);
     knopf.addEventListener('pointercancel', ende);
     oben.append(knopf);
+  }
+
+  // ---------- Zeichnen mit dem Stift ----------
+  // Der Pencil zeichnet, Finger verschieben. Beginnt ein Strich auf einer
+  // Karte, wird direkt auf die Karte geschrieben.
+  function inkZeichnen() {
+    inkSvg.replaceChildren(...state.ink.map((st) => s('path', { fill: st.farbe, d: brettD(st, true) })));
+  }
+  const brettD = (st, fertig) => strichD(st.p.map(([x, y, d]) => [x * W, y * H, d]), st.g * U, st.druck, fertig);
+
+  const r4 = (n) => Math.round(n * 10000) / 10000;
+  const r1 = (n) => Math.round(n * 10) / 10;
+
+  function brettPunkt(e) {
+    const r = root.getBoundingClientRect();
+    return [r4((e.clientX - r.left) / W), r4((e.clientY - r.top) / H)];
+  }
+
+  /** Fingerposition im Koordinatensystem der Handschrift einer Karte (mit Drehung). */
+  function kartenPunkt(item, e) {
+    const [w, hh] = groesse(item);
+    const wpx = w * U;
+    const hpx = hh * U;
+    const sc = skalierung(item);
+    const r = root.getBoundingClientRect();
+    const dx = e.clientX - r.left - item.x * W;
+    const dy = e.clientY - r.top - item.y * H;
+    const a = ((item.rot || 0) * Math.PI) / 180;
+    const lx = (dx * Math.cos(a) + dy * Math.sin(a)) / sc + wpx / 2;
+    const ly = (-dx * Math.sin(a) + dy * Math.cos(a)) / sc + hpx / 2;
+    const f = Math.min(wpx / item.ink.vw, hpx / item.ink.vh);
+    const ox = (wpx - item.ink.vw * f) / 2;
+    const oy = (hpx - item.ink.vh * f) / 2;
+    return { x: r1((lx - ox) / f), y: r1((ly - oy) / f), drin: lx >= 0 && lx <= wpx && ly >= 0 && ly <= hpx, f: f * sc };
+  }
+
+  let zeichnung = null;
+  let letzterStift = 0;
+
+  function radieren(e) {
+    const r = root.getBoundingClientRect();
+    const px = e.clientX - r.left;
+    const py = e.clientY - r.top;
+    const radius = Math.max(14, U * 2.2);
+    const vorher = state.ink.length;
+    state.ink = state.ink.filter((st) => !st.p.some(([x, y]) => Math.hypot(x * W - px, y * H - py) < radius + (st.g * U) / 2));
+    if (state.ink.length !== vorher) {
+      zeichnung.geaendert = true;
+      inkZeichnen();
+    }
+    for (const item of state.items) {
+      if (!typ(item).schreibbar || !item.ink?.striche?.length) continue;
+      const k = kartenPunkt(item, e);
+      if (!k.drin) continue;
+      const n = item.ink.striche.length;
+      const ru = radius / k.f;
+      item.ink.striche = item.ink.striche.filter((st) => !st.p.some(([x, y]) => Math.hypot(x - k.x, y - k.y) < ru + st.g / 2));
+      if (item.ink.striche.length !== n) {
+        zeichnung.geaendert = true;
+        inhaltZeichnen(item);
+      }
+    }
+  }
+
+  root.addEventListener(
+    'pointerdown',
+    (e) => {
+      if (readOnly || e.target.closest('.btoolbar, .rotknob, .inkbar, .link-hint')) return;
+      if (!zeichnetZeiger(e)) {
+        // Handballen beim Schreiben ignorieren
+        if (e.pointerType === 'touch' && (zeichnung || performance.now() - letzterStift < 350)) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+        return;
+      }
+      e.stopPropagation();
+      e.preventDefault();
+      if (zeichnung) return;
+      try {
+        root.setPointerCapture(e.pointerId);
+      } catch {
+        /* Zeiger bereits beendet */
+      }
+      const itemEl = e.target.closest('.bitem');
+      const item = itemEl ? state.items.find((i) => i.id === itemEl.dataset.id) : null;
+      const basis = { id: e.pointerId, item, vorher: hist.capture(), t0: performance.now(), start: [e.clientX, e.clientY], weg: 0 };
+      if (stift.radierer) {
+        zeichnung = { ...basis, art: 'radierer', geaendert: false };
+        radieren(e);
+        return;
+      }
+      const druck = e.pointerType === 'pen';
+      if (item && typ(item).schreibbar) {
+        if (!item.ink) {
+          const [w, hh] = groesse(item);
+          item.ink = { vw: 1000, vh: Math.round((1000 * hh) / w), striche: [] };
+        }
+        let flaeche = els.get(item.id).inner.querySelector('.karte-ink');
+        if (!flaeche) {
+          inhaltZeichnen(item);
+          flaeche = els.get(item.id).inner.querySelector('.karte-ink');
+        }
+        const k = kartenPunkt(item, e);
+        const strich = { id: uid(), farbe: stift.farbe, g: kartenStiftGroesse(), druck, p: [[k.x, k.y, druckVon(e)]] };
+        const pfad = s('path', { fill: strich.farbe });
+        flaeche.append(pfad);
+        zeichnung = { ...basis, art: 'karte', strich, pfad };
+      } else {
+        if (!item) auswahlSetzen(null);
+        const strich = { id: uid(), farbe: stift.farbe, g: stift.dick ? 1.6 : 0.75, druck, p: [[...brettPunkt(e), druckVon(e)]] };
+        const pfad = s('path', { fill: strich.farbe });
+        inkSvg.append(pfad);
+        zeichnung = { ...basis, art: 'brett', strich, pfad };
+      }
+      oben.classList.add('hidden');
+    },
+    { capture: true },
+  );
+
+  root.addEventListener('pointermove', (e) => {
+    if (!zeichnung || e.pointerId !== zeichnung.id) return;
+    if (zeichnung.art === 'radierer') {
+      radieren(e);
+      return;
+    }
+    const z = zeichnung;
+    z.weg = Math.max(z.weg, Math.hypot(e.clientX - z.start[0], e.clientY - z.start[1]));
+    for (const pe of ereignisPunkte(e)) {
+      if (z.art === 'karte') {
+        const k = kartenPunkt(z.item, pe);
+        z.strich.p.push([k.x, k.y, druckVon(pe)]);
+      } else {
+        z.strich.p.push([...brettPunkt(pe), druckVon(pe)]);
+      }
+    }
+    const st = z.strich;
+    z.pfad.setAttribute('d', z.art === 'karte' ? strichD(st.p, st.g, st.druck, false) : brettD(st, false));
+  });
+
+  function zeichnenEnde(e) {
+    if (!zeichnung || e.pointerId !== zeichnung.id) return;
+    const z = zeichnung;
+    zeichnung = null;
+    if (e.pointerType === 'pen') letzterStift = performance.now();
+    oben.classList.remove('hidden');
+    if (z.art === 'radierer') {
+      if (z.geaendert) {
+        hist.push(z.vorher);
+        hinweisAktualisieren();
+        onChange();
+      }
+      return;
+    }
+    const tipp = z.weg < 6 && performance.now() - z.t0 < 300;
+    if (tipp && z.item && (verbindeVon || z.art === 'brett')) {
+      // Kurzes Antippen mit dem Stift wählt aus (bzw. verbindet), statt einen Punkt zu malen.
+      z.pfad.remove();
+      if (verbindeVon && verbindeVon !== z.item.id) verbinden(verbindeVon, z.item.id);
+      else auswahlSetzen(auswahl?.id === z.item.id ? null : { kind: 'item', id: z.item.id });
+      return;
+    }
+    if (z.art === 'karte') {
+      z.item.ink.striche.push(z.strich);
+      inhaltZeichnen(z.item);
+    } else {
+      state.ink.push(z.strich);
+      z.pfad.setAttribute('d', brettD(z.strich, true));
+    }
+    hist.push(z.vorher);
+    hinweisAktualisieren();
+    onChange();
+  }
+  root.addEventListener('pointerup', zeichnenEnde);
+  root.addEventListener('pointercancel', zeichnenEnde);
+
+  if (!readOnly) {
+    const leiste = stiftleiste({
+      onChange: () => root.classList.toggle('fingermode', stift.finger),
+      onClear: async () => {
+        if (!state.ink.length) return;
+        const ok = await confirmDialog({
+          title: 'Zeichnung löschen?',
+          text: 'Alle Striche auf dieser Fläche werden entfernt. Die Schrift auf den Karten bleibt.',
+          okText: 'Löschen',
+          danger: true,
+        });
+        if (!ok) return;
+        hist.push();
+        state.ink = [];
+        inkZeichnen();
+        hinweisAktualisieren();
+        onChange();
+      },
+    });
+    root.append(leiste.el);
+    root.classList.toggle('fingermode', stift.finger);
   }
 
   // ---------- Öffentliche Schnittstelle ----------
