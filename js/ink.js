@@ -310,3 +310,89 @@ export function stiftleiste({ onClear, onChange = () => {} }) {
   zeichnen();
   return { el: bar, refresh: zeichnen };
 }
+
+// ---------------------------------------------------------------
+// Schreibfeld direkt in der Seite (z. B. auf dem Commitment-Kärtchen)
+// ---------------------------------------------------------------
+
+let stiftGesehen = false;
+
+/**
+ * Fläche, auf die man mit Stift oder Finger schreibt.
+ * onStart() wird vor jedem Strich aufgerufen (für Rückgängig),
+ * onChange(ink) danach mit der neuen Handschrift.
+ */
+export function inkFeld({ ink = null, readOnly = false, onStart = () => {}, onChange = () => {} }) {
+  let aktuell = ink;
+  const svg = s('svg', { class: 'feld-ink', preserveAspectRatio: 'xMidYMid meet' });
+  const el = h('div', { class: 'ink-feld' + (readOnly ? ' readonly' : '') }, svg);
+
+  function zeichnen() {
+    if (!aktuell) {
+      svg.replaceChildren();
+      svg.removeAttribute('viewBox');
+      el.classList.remove('beschrieben');
+      return;
+    }
+    svg.setAttribute('viewBox', `0 0 ${aktuell.vw} ${aktuell.vh}`);
+    svg.replaceChildren(...aktuell.striche.map((st) => s('path', { d: strichD(st.p, st.g, st.druck), fill: st.farbe })));
+    el.classList.toggle('beschrieben', aktuell.striche.length > 0);
+  }
+  zeichnen();
+  if (readOnly) return { el, set: (i) => ((aktuell = i), zeichnen()) };
+
+  let strich = null;
+  let pfad = null;
+  let masse = null;
+  const punkt = (e) => {
+    const { r, f, ox, oy } = masse;
+    return [
+      Math.round(((e.clientX - r.left - ox) / f) * 10) / 10,
+      Math.round(((e.clientY - r.top - oy) / f) * 10) / 10,
+      druckVon(e),
+    ];
+  };
+  el.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'pen') stiftGesehen = true;
+    else if (stiftGesehen && e.pointerType === 'touch') return; // Handballen
+    if (strich) return;
+    e.preventDefault();
+    el.setPointerCapture(e.pointerId);
+    const r = el.getBoundingClientRect();
+    if (!aktuell) {
+      aktuell = { vw: 1000, vh: Math.round((1000 * r.height) / r.width), striche: [] };
+      svg.setAttribute('viewBox', `0 0 ${aktuell.vw} ${aktuell.vh}`);
+    }
+    const f = Math.min(r.width / aktuell.vw, r.height / aktuell.vh);
+    masse = { r, f, ox: (r.width - aktuell.vw * f) / 2, oy: (r.height - aktuell.vh * f) / 2 };
+    onStart();
+    // Strichstärke in Bildschirm-Pixeln der unskalierten Karte
+    const g = ((stift.dick ? 9 : 5) * aktuell.vw) / (el.offsetWidth || r.width);
+    strich = { id: uid(), farbe: stift.farbe, g, druck: e.pointerType === 'pen', p: [punkt(e)], pid: e.pointerId };
+    pfad = s('path', { fill: strich.farbe });
+    svg.append(pfad);
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (!strich || e.pointerId !== strich.pid) return;
+    for (const pe of ereignisPunkte(e)) strich.p.push(punkt(pe));
+    pfad.setAttribute('d', strichD(strich.p, strich.g, strich.druck, false));
+  });
+  const ende = (e) => {
+    if (!strich || e.pointerId !== strich.pid) return;
+    delete strich.pid;
+    aktuell = { ...aktuell, striche: [...aktuell.striche, strich] };
+    strich = null;
+    zeichnen();
+    onChange(aktuell);
+  };
+  el.addEventListener('pointerup', ende);
+  el.addEventListener('pointercancel', ende);
+
+  return {
+    el,
+    set(i) {
+      aktuell = i;
+      zeichnen();
+    },
+  };
+}

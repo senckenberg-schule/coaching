@@ -25,6 +25,11 @@ const KERN = [
   'js/tools/aktionsbrett.js',
   'js/tools/skala.js',
   'js/tools/skala-element.js',
+  'js/tools/misch.js',
+  'js/tools/zeitlinie.js',
+  'js/tools/landkarte.js',
+  'js/tools/commitment.js',
+  'js/screens/rueckblick.js',
   'js/tools/karten.js',
   'js/tools/gefuehle.js',
   'js/screens/home.js',
@@ -41,6 +46,8 @@ const KERN = [
     'ankommen', 'ziel', 'kraftquellen', 'plan', 'aktionsbrett', 'skala', 'karten', 'gefuehle',
     'coach', 'moment', 'feier', 'glanz', 'heute', 'flagge', 'schritt', 'eigene', 'schueler',
     'skala-0', 'skala-1', 'skala-2', 'skala-3', 'skala-4',
+    'landkarte', 'zeitlinie', 'commitment', 'ampel', 'stern',
+    'lk-menschen', 'lk-staerken', 'lk-orte', 'lk-hobbys', 'lk-erfolge', 'lk-tiere',
   ].map((n) => `bilder/app/${n}.svg`),
 ];
 

@@ -34,6 +34,13 @@ export function h(tag, props, ...children) {
   return el;
 }
 
+/** Inhalt eines Elements ersetzen – wie h(): Listen werden aufgelöst, leere Einträge ausgelassen. */
+export function fuellen(el, ...children) {
+  el.replaceChildren();
+  appendChildren(el, children);
+  return el;
+}
+
 /** SVG-Element erzeugen */
 export function s(tag, props, ...children) {
   const el = document.createElementNS(SVG_NS, tag);

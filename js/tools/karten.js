@@ -1,11 +1,13 @@
-// Methodenkarten: rechteckig, rund oder oval – mit dem Stift beschriften, legen und verbinden.
-import { h } from '../util.js';
+// Methodenkarten: rechteckig, rund oder oval – mit dem Stift beschriften, legen,
+// verbinden und mit der Ampel priorisieren.
+import { h, fuellen } from '../util.js';
 import { icon } from '../icons.js';
 import { createBoard, trayItem } from '../board.js';
 import { FARBEN } from '../data.js';
 import { schreibfeld, karteInkSvg } from '../ink.js';
 import { segmented } from '../ui.js';
 import { SKALA_TYPE, skalaToolbar, skalaTray, frageSchreiben } from './skala-element.js';
+import { reiterLeiste } from './aktionsbrett.js';
 
 const FORMEN = {
   rechteckig: { name: 'rechteckig', size: [21, 13.5] },
@@ -13,6 +15,13 @@ const FORMEN = {
   oval: { name: 'oval', size: [23, 14] },
 };
 const FORM_REIHE = ['rechteckig', 'rund', 'oval'];
+
+export const AMPEL = {
+  rot: { name: 'Später', text: 'kann warten', farbe: '#f03e3e' },
+  gelb: { name: 'Bald', text: 'kommt als Nächstes', farbe: '#fab005' },
+  gruen: { name: 'Jetzt', text: 'das packe ich an', farbe: '#2f9e44' },
+};
+const AMPEL_REIHE = ['rot', 'gelb', 'gruen'];
 
 function schriftgroesse(text) {
   const n = (text || '').length;
@@ -23,11 +32,11 @@ function schriftgroesse(text) {
   return 1.25;
 }
 
-function karteElement(form, farbe, text, ink) {
+export function karteElement(form, farbe, text, ink, ampel) {
   const hatSchrift = ink?.striche?.length > 0;
   return h(
     'div',
-    { class: `karte ${form}`, style: { '--c': farbe } },
+    { class: `karte ${form}` + (ampel ? ' ampel-' + ampel : ''), style: { '--c': farbe, '--ampel': AMPEL[ampel]?.farbe } },
     // Ältere, getippte Karten zeigen ihren Text
     text
       ? h('span', { class: 'karte-text', style: { fontSize: `calc(var(--u) * ${schriftgroesse(text)})` } }, text)
@@ -37,125 +46,110 @@ function karteElement(form, farbe, text, ink) {
   );
 }
 
-const TYPES = {
-  karte: {
-    size: (it) => FORMEN[it.form]?.size || FORMEN.rechteckig.size,
-    rotate: true,
-    scale: true,
-    radius: (it) => (it.form === 'rechteckig' ? 'calc(var(--u) * 2.2)' : '50%'),
-    // Mit dem Stift direkt auf die Karte schreiben
-    schreibbar: true,
-    render(it, inner) {
-      inner.append(karteElement(it.form, it.farbe, it.text, it.ink));
-    },
-  },
-  skala: SKALA_TYPE,
-};
-
-export default {
-  create() {
-    return { items: [], links: [] };
-  },
-
-  mount(container, { state, readOnly = false, onChange, onHistory }) {
-    const wrap = h('div', { class: 'tool tool-karten' + (readOnly ? ' readonly' : '') });
-    const main = h('div', { class: 'tool-main' });
-    wrap.append(main);
-    container.append(wrap);
-
-    async function beschriften(it, api) {
-      const [w, hh] = FORMEN[it.form]?.size || FORMEN.rechteckig.size;
-      const ink = await schreibfeld({ form: it.form, farbe: it.farbe, ink: it.ink, seitenverhaeltnis: hh / w });
-      if (!ink) return;
-      api.change(it, () => {
-        it.ink = ink;
-        if (ink.striche.length) it.text = '';
-      });
-    }
-
-    const board = createBoard(main, {
-      state,
-      types: TYPES,
-      readOnly,
-      links: true,
-      onChange,
-      onHistory,
-      emptyHint: 'Ziehe eine Karte auf die Fläche und beschrifte sie',
-      onPlaced: (it) => {
-        if (it.type === 'karte' && !it.text && !it.ink?.striche?.length) beschriften(it, board.api);
-      },
-      onDoubleTap: (it, api) => (it.type === 'skala' ? frageSchreiben(it, api) : beschriften(it, api)),
-      toolbar(it, api) {
-        if (it.type === 'skala') return skalaToolbar(it, api, board);
-        return [
-          { icon: 'pencil', label: 'Schreiben', onClick: () => beschriften(it, api) },
-          {
-            icon: 'palette',
-            label: 'Farbe',
-            menu: () =>
-              FARBEN.map((f) => ({
-                swatch: f,
-                active: f === it.farbe,
-                onClick: () => api.change(it, () => (it.farbe = f)),
-              })),
-          },
-          {
-            icon: 'shape',
-            label: 'Form',
-            menu: () =>
-              FORM_REIHE.map((f) => ({
-                content: h('span', { class: 'form-mini ' + f }),
-                label: FORMEN[f].name,
-                active: f === it.form,
-                onClick: () => api.change(it, () => (it.form = f)),
-              })),
-          },
-          { icon: 'link', label: 'Verbinden', onClick: () => api.startLink(it) },
-          { icon: 'trash', danger: true, onClick: () => api.remove(it) },
-        ];
-      },
-    });
-
-    if (!readOnly) wrap.append(seitenleiste(board));
-
-    return {
-      destroy() {
-        board.destroy();
-        wrap.remove();
-      },
-      undo: () => board.undo(),
-      canUndo: () => board.canUndo(),
-    };
-  },
-};
-
-function seitenleiste(board) {
-  const tray = h('div', { class: 'tray glass' });
-  let farbe = FARBEN[2];
-  let reiter = 'karten';
-  const inhalt = h('div', { class: 'tray-content' });
-  const tabs = segmented(
-    [
-      { value: 'karten', label: 'Karten' },
-      { value: 'skalen', label: 'Skalen' },
-    ],
-    reiter,
-    (v) => {
-      reiter = v;
-      zeichnen();
-    },
+function ampelLichter(aktiv, cls = 'ampel-badge') {
+  return h(
+    'div',
+    { class: cls },
+    AMPEL_REIHE.map((a) => h('i', { class: a + (a === aktiv ? ' an' : '') })),
   );
-  tray.append(tabs, inhalt);
+}
 
+export const KARTE_TYPE = {
+  size: (it) => FORMEN[it.form]?.size || FORMEN.rechteckig.size,
+  rotate: true,
+  scale: true,
+  radius: (it) => (it.form === 'rechteckig' ? 'calc(var(--u) * 2.2)' : '50%'),
+  // Mit dem Stift direkt auf die Karte schreiben
+  schreibbar: true,
+  render(it, inner) {
+    inner.append(karteElement(it.form, it.farbe, it.text, it.ink, it.ampel));
+    if (it.ampel) inner.append(ampelLichter(it.ampel, 'ampel-badge ' + it.form));
+  },
+};
+
+export async function beschriften(it, api) {
+  const [w, hh] = FORMEN[it.form]?.size || FORMEN.rechteckig.size;
+  const ink = await schreibfeld({ form: it.form, farbe: it.farbe, ink: it.ink, seitenverhaeltnis: hh / w });
+  if (!ink) return;
+  api.change(it, () => {
+    it.ink = ink;
+    if (ink.striche.length) it.text = '';
+  });
+}
+
+export function kartenToolbar(it, api) {
+  return [
+    { icon: 'pencil', label: 'Schreiben', onClick: () => beschriften(it, api) },
+    {
+      content: ampelLichter(it.ampel, 'ampel-mini'),
+      label: 'Ampel',
+      menu: () => [
+        ...AMPEL_REIHE.map((a) => ({
+          content: h('i', { class: 'ampel-punkt', style: { background: AMPEL[a].farbe } }),
+          label: AMPEL[a].name,
+          active: it.ampel === a,
+          onClick: () => api.change(it, () => (it.ampel = a)),
+        })),
+        { icon: 'x', label: 'keine', active: !it.ampel, onClick: () => api.change(it, () => delete it.ampel) },
+      ],
+    },
+    {
+      icon: 'palette',
+      label: 'Farbe',
+      menu: () =>
+        FARBEN.map((f) => ({
+          swatch: f,
+          active: f === it.farbe,
+          onClick: () => api.change(it, () => (it.farbe = f)),
+        })),
+    },
+    {
+      icon: 'shape',
+      label: 'Form',
+      menu: () =>
+        FORM_REIHE.map((f) => ({
+          content: h('span', { class: 'form-mini ' + f }),
+          label: FORMEN[f].name,
+          active: f === it.form,
+          onClick: () => api.change(it, () => (it.form = f)),
+        })),
+    },
+    { icon: 'link', label: 'Verbinden', onClick: () => api.startLink(it) },
+    { icon: 'trash', danger: true, onClick: () => api.remove(it) },
+  ];
+}
+
+/** Hintergrund mit drei Ampel-Zonen. */
+export function ampelHintergrund() {
+  return h(
+    'div',
+    { class: 'vorlage-ampel' },
+    AMPEL_REIHE.map((a) =>
+      h(
+        'div',
+        { class: 'ampel-zone ' + a, style: { '--z': AMPEL[a].farbe } },
+        h('div', { class: 'az-kopf' }, h('i'), h('b', null, AMPEL[a].name), h('small', null, AMPEL[a].text)),
+      ),
+    ),
+  );
+}
+
+/** Karte in eine Zone gelegt: Ampel passend setzen. */
+export function ampelZone(state, it) {
+  if (state.vorlage !== 'ampel' || it.type !== 'karte') return false;
+  const neu = it.x < 1 / 3 ? 'rot' : it.x < 2 / 3 ? 'gelb' : 'gruen';
+  if (it.ampel === neu) return false;
+  it.ampel = neu;
+  return true;
+}
+
+/** Seitenleisten-Inhalt: neue Karten, Farbe und (optional) Hintergrund. */
+export function kartenTray(board, { vorlage } = {}) {
+  let farbe = FARBEN[2];
+  const el = h('div', { class: 'tray-content' });
   function zeichnen() {
-    inhalt.classList.remove('swap');
-    void inhalt.offsetWidth;
-    inhalt.classList.add('swap');
-    if (reiter === 'skalen') {
-      inhalt.replaceChildren(skalaTray(board));
-      return;
-    }
-    inhalt.replaceChildren(
+    fuellen(
+      el,
       h('h3', null, 'Neue Karte'),
       h('p', { class: 'tray-hint' }, 'Tippe oder ziehe eine Karte auf die Fläche.'),
       h(
@@ -184,14 +178,86 @@ function seitenleiste(board) {
           }),
         ),
       ),
+      vorlage
+        ? [
+            h('h3', null, 'Hintergrund'),
+            segmented(
+              [
+                { value: 'frei', label: 'Frei' },
+                { value: 'ampel', label: 'Ampel' },
+              ],
+              vorlage.get(),
+              (v) => vorlage.set(v),
+            ),
+            h('p', { class: 'tray-hint' }, 'Bei „Ampel“ bekommt eine Karte die Farbe der Zone, in die du sie legst.'),
+          ]
+        : null,
       h(
         'div',
         { class: 'tray-tipp' },
         h('b', null, 'Tipp: '),
-        'Mit dem Stift direkt auf eine Karte schreiben – oder zweimal tippen für das große Schreibfeld. Mit zwei Fingern drehen und vergrößern.',
+        'Mit dem Stift direkt auf eine Karte schreiben – oder zweimal tippen für das große Schreibfeld.',
       ),
     );
   }
   zeichnen();
-  return tray;
+  return el;
 }
+
+export default {
+  create() {
+    return { items: [], links: [] };
+  },
+
+  mount(container, { state, readOnly = false, onChange = () => {}, onHistory }) {
+    const wrap = h('div', { class: 'tool tool-karten' + (readOnly ? ' readonly' : '') });
+    const main = h('div', { class: 'tool-main' });
+    wrap.append(main);
+    container.append(wrap);
+
+    const board = createBoard(main, {
+      state,
+      types: { karte: KARTE_TYPE, skala: SKALA_TYPE },
+      readOnly,
+      links: true,
+      onChange,
+      onHistory,
+      emptyHint: 'Ziehe eine Karte auf die Fläche und beschrifte sie',
+      hintergrund: (s) => (s.vorlage === 'ampel' ? ampelHintergrund() : null),
+      onMoved: (it) => ampelZone(state, it),
+      onPlaced: (it) => {
+        if (it.type === 'karte' && !it.text && !it.ink?.striche?.length) beschriften(it, board.api);
+      },
+      onDoubleTap: (it, api) => (it.type === 'skala' ? frageSchreiben(it, api) : beschriften(it, api)),
+      toolbar: (it, api) => (it.type === 'skala' ? skalaToolbar(it, api, board) : kartenToolbar(it, api)),
+    });
+
+    const vorlage = {
+      get: () => state.vorlage || 'frei',
+      set(v) {
+        state.vorlage = v === 'ampel' ? 'ampel' : undefined;
+        board.hintergrundNeu();
+        onChange();
+      },
+    };
+
+    if (!readOnly) {
+      wrap.append(
+        reiterLeiste([
+          { id: 'karten', label: 'Karten', inhalt: () => kartenTray(board, { vorlage }) },
+          { id: 'skalen', label: 'Skalen', inhalt: () => skalaTray(board) },
+        ]),
+      );
+    }
+
+    return {
+      destroy() {
+        board.destroy();
+        wrap.remove();
+      },
+      undo: () => board.undo(),
+      canUndo: () => board.canUndo(),
+    };
+  },
+};
+

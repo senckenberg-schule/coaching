@@ -1,5 +1,5 @@
 // Coach-Bereich: seitliche Schublade mit Phasen, Werkzeugen, Leitfragen, Momenten und Notizen.
-import { h, img, formatTime, formatDate } from '../util.js';
+import { h, img, formatTime, formatDate, fuellen } from '../util.js';
 import { icon } from '../icons.js';
 import { PHASEN, WERKZEUGE, WERKZEUG_REIHENFOLGE, MOMENT_VORSCHLAEGE, phaseById, phaseIndex } from '../data.js';
 import { ask, confirmDialog } from '../ui.js';
@@ -33,7 +33,8 @@ export function openCoach(ctx) {
     const aktivIdx = phaseIndex(ses.phase);
     const aktuell = ctx.aktuellesWerkzeug();
 
-    panel.replaceChildren(
+    fuellen(
+      panel,
       h(
         'div',
         { class: 'dr-head' },
@@ -160,14 +161,44 @@ export function openCoach(ctx) {
         ),
       ),
 
+      aktuell && WERKZEUGE[aktuell].leitfragen
+        ? abschnitt(
+            `Fragen zu „${WERKZEUGE[aktuell].name}“`,
+            h(
+              'ul',
+              { class: 'dr-questions methode' },
+              WERKZEUGE[aktuell].leitfragen.map((q) => h('li', null, q)),
+            ),
+          )
+        : null,
+
       abschnitt(
-        'Leitfragen',
+        `Leitfragen zur Phase „${p.name}“`,
         h(
           'ul',
           { class: 'dr-questions' },
           p.leitfragen.map((q) => h('li', null, q)),
         ),
       ),
+
+      ctx.rueckblick
+        ? abschnitt(
+            'Letztes Mal',
+            h(
+              'button',
+              {
+                class: 'gbtn glass wide',
+                onClick: () => {
+                  schliessen();
+                  ctx.rueckblick();
+                },
+              },
+              img('bilder/app/commitment.svg', 'btn-img'),
+              'Commitment von letztem Mal',
+              ctx.rueckblickErgebnis() ? h('span', { class: 'badge-ok' }, '✓') : null,
+            ),
+          )
+        : null,
 
       abschnitt(
         'Momente',

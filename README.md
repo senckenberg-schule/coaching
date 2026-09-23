@@ -8,16 +8,20 @@ Das Coaching folgt dem **4-Phasen-Modell**:
 | Phase | Frage für die Schüler | Passende Werkzeuge |
 |---|---|---|
 | 1 · Ankommen | Schön, dass du da bist! Wie geht es dir? | Gefühle, Skala |
-| 2 · Ziel | Was wünschst du dir? Wo möchtest du hin? | Skala, Aktionsbrett, Karten |
-| 3 · Kraftquellen | Was gibt dir Kraft? Wer hilft dir? | Karten, Aktionsbrett |
-| 4 · Plan | Was ist dein nächster Schritt? | Karten, Skala |
+| 2 · Ziel | Was wünschst du dir? Wo möchtest du hin? | Skala, Zeitlinie, Aktionsbrett, Karten |
+| 3 · Kraftquellen | Was gibt dir Kraft? Wer hilft dir? | Ressourcen-Landkarte, Karten, Aktionsbrett, Zeitlinie |
+| 4 · Plan | Was ist dein nächster Schritt? | Karten (Ampel), Commitment, Skala |
 
 ## Werkzeuge
 
 - **Gefühle** – 20 Gefühlskarten (nach Grundgefühl sortiert) aufs Brett legen, die Stärke einschätzen (ein bisschen / mittel / sehr).
 - **Skala** – Skalen von 0 bis 10 als Elemente auf der Fläche, beliebig viele und frei kombinierbar (verschieben, drehen – z. B. senkrecht –, vergrößern). Punkte wie „Heute“, „Ziel“, „Nächster Schritt“ oder eigene Punkte auf eine Skala ziehen; zum Löschen weit wegziehen. Die Frage schreibt man mit dem Stift oben auf die Skala. Wahlweise mit Zahlen oder Gesichtern. Skalen gibt es auch im Aktionsbrett und bei den Karten.
 - **Aktionsbrett** – Figuren (rund/eckig, groß/klein, 10 Farben) mit Augen für die Blickrichtung, dazu Symbole (Zuhause, Schule, Stein, Stern …). Figuren lassen sich benennen und drehen.
-- **Karten** – Methodenkarten in rechteckig, rund oder oval, **mit dem Apple Pencil (oder Finger) beschriftet**, mit Linien verbindbar.
+- **Karten** – Methodenkarten in rechteckig, rund oder oval, **mit dem Apple Pencil (oder Finger) beschriftet**, mit Linien verbindbar. Jede Karte kann eine **Ampel** bekommen (Später / Bald / Jetzt). Mit dem Hintergrund „Ampel“ gibt es drei Zonen – eine Karte bekommt automatisch die Farbe der Zone, in die man sie legt.
+- **Zeitlinie** – Vergangenheit, Heute, Zukunft. Die Ich-Figur steht auf „Heute“ und kann an andere Zeitpunkte geschoben werden. Karten, Gefühle, Symbole und Figuren lassen sich dazulegen; Verbindungen werden als **Pfeile** gezeichnet („eine Kraftquelle aus der Vergangenheit mitnehmen“).
+- **Ressourcen-Landkarte** – „Ich“ in der Mitte, rundherum sechs Bereiche (Menschen, Stärken, Hobbys, Orte, Erfolge, Tiere & Dinge) und drei Nähe-Ringe. Figuren, Symbole und Karten hineinlegen: je näher an der Mitte, desto wichtiger.
+- **Commitment** – „Mein Versprechen an mich“: Vorhaben, bis wann, wer hilft, wie sicher (0–10) und zwei Unterschriften – alles von Hand. Es erscheint beim **Abschluss** der Sitzung und zu Beginn der **nächsten Sitzung** wieder („Wie ist es gelaufen?“ – mit Stempel).
+- Im Coach-Bereich stehen zu jedem Werkzeug passende **Fragen zur Methode**.
 
 ## Bedienung
 

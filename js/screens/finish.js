@@ -1,6 +1,7 @@
 // Abschluss: kleine Feier mit Konfetti.
 import { h, img } from '../util.js';
 import { PHASEN, FARBEN } from '../data.js';
+import { commitmentAus, commitmentAnsicht } from '../tools/commitment.js';
 
 export function showFinish(schueler, ses, weiter) {
   document.body.className = 'theme-plan';
@@ -22,13 +23,14 @@ export function showFinish(schueler, ses, weiter) {
     );
   }
   const geschafft = (ses.maxPhase ?? 0) + 1;
+  const versprechen = commitmentAus(ses);
   const ov = h(
     'div',
     { class: 'finish' },
     konfetti,
     h(
       'div',
-      { class: 'finish-card glass' },
+      { class: 'finish-card glass' + (versprechen ? ' mit-commitment' : '') },
       h('div', { class: 'fc-icon' }, img('bilder/app/feier.svg')),
       h('h1', null, `Super gemacht, ${schueler.name}!`),
       h('p', null, geschafft >= PHASEN.length ? 'Du hast alle vier Phasen geschafft.' : `Du hast heute ${geschafft} von ${PHASEN.length} Phasen geschafft.`),
@@ -39,6 +41,9 @@ export function showFinish(schueler, ses, weiter) {
           h('div', { class: 'fc-phase' + (i < geschafft ? ' done' : ''), style: { '--d': 0.5 + i * 0.18 + 's' } }, img(p.icon), h('span', null, p.name)),
         ),
       ),
+      versprechen
+        ? h('div', { class: 'fc-commitment' }, h('h3', null, 'Dein Versprechen an dich'), commitmentAnsicht(versprechen, schueler))
+        : null,
       h(
         'button',
         {

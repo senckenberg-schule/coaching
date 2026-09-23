@@ -28,22 +28,36 @@ function karte(g, staerke) {
   );
 }
 
-const TYPES = {
-  gefuehl: {
-    size: () => [14, 17.5],
-    rotate: true,
-    fixedScale: (it) => [0.9, 1, 1.13][(it.staerke || 2) - 1],
-    radius: () => 'calc(var(--u) * 2.2)',
-    render(it, inner) {
-      const g = gefuehlById(it.gid);
-      if (!g) {
-        inner.append(h('div', { class: 'gcard' }, h('div', { class: 'gname' }, '?')));
-        return;
-      }
-      inner.append(karte(g, it.staerke || 2));
-    },
+export const GEFUEHL_TYPE = {
+  size: () => [14, 17.5],
+  rotate: true,
+  fixedScale: (it) => [0.9, 1, 1.13][(it.staerke || 2) - 1],
+  radius: () => 'calc(var(--u) * 2.2)',
+  render(it, inner) {
+    const g = gefuehlById(it.gid);
+    if (!g) {
+      inner.append(h('div', { class: 'gcard' }, h('div', { class: 'gname' }, '?')));
+      return;
+    }
+    inner.append(karte(g, it.staerke || 2));
   },
 };
+
+export function gefuehlToolbar(it, api) {
+  return [
+    ...STAERKEN.map((st) => ({
+      content: h(
+        'span',
+        { class: 'mini-dots' },
+        [1, 2, 3].map((i) => h('i', { class: i <= st.wert ? 'on' : '' })),
+      ),
+      label: st.name,
+      active: (it.staerke || 2) === st.wert,
+      onClick: () => api.change(it, () => (it.staerke = st.wert)),
+    })),
+    { icon: 'trash', danger: true, onClick: () => api.remove(it) },
+  ];
+}
 
 export default {
   create() {
@@ -59,7 +73,7 @@ export default {
     let stapelNeuZeichnen = () => {};
     const board = createBoard(main, {
       state,
-      types: TYPES,
+      types: { gefuehl: GEFUEHL_TYPE },
       readOnly,
       onChange: () => {
         onChange?.();
@@ -67,27 +81,13 @@ export default {
       },
       onHistory,
       emptyHint: 'Welche Gefühle hast du gerade? Lege sie hierher.',
-      toolbar(it, api) {
-        return [
-          ...STAERKEN.map((st) => ({
-            content: h(
-              'span',
-              { class: 'mini-dots' },
-              [1, 2, 3].map((i) => h('i', { class: i <= st.wert ? 'on' : '' })),
-            ),
-            label: st.name,
-            active: (it.staerke || 2) === st.wert,
-            onClick: () => api.change(it, () => (it.staerke = st.wert)),
-          })),
-          { icon: 'trash', danger: true, onClick: () => api.remove(it) },
-        ];
-      },
+      toolbar: gefuehlToolbar,
     });
 
     if (!readOnly) {
-      const { el, neuZeichnen } = stapel(board, state);
+      const { el, neuZeichnen } = gefuehlStapel(board, state);
       stapelNeuZeichnen = neuZeichnen;
-      wrap.append(el);
+      wrap.append(h('div', { class: 'tray glass tray-gefuehle' }, el));
     }
 
     return {
@@ -104,8 +104,9 @@ export default {
   },
 };
 
-function stapel(board, state) {
-  const tray = h('div', { class: 'tray glass tray-gefuehle' });
+/** Stapel der Gefühlskarten (für die Seitenleiste). */
+export function gefuehlStapel(board, state) {
+  const tray = h('div', { class: 'tray-content' });
   const daten = getGefuehle();
   let filter = 'alle';
   const chips = h('div', { class: 'gchips' });

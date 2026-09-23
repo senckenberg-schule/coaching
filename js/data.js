@@ -21,7 +21,7 @@ export const PHASEN = [
     name: 'Ziel',
     icon: 'bilder/app/ziel.svg',
     frage: 'Was wünschst du dir? Wo möchtest du hin?',
-    werkzeuge: ['skala', 'aktionsbrett', 'karten'],
+    werkzeuge: ['skala', 'zeitlinie', 'aktionsbrett', 'karten'],
     skalaFrage: 'Wo stehst du gerade – und wo möchtest du hin?',
     leitfragen: [
       'Was wünschst du dir stattdessen?',
@@ -36,7 +36,7 @@ export const PHASEN = [
     name: 'Kraftquellen',
     icon: 'bilder/app/kraftquellen.svg',
     frage: 'Was gibt dir Kraft? Wer hilft dir?',
-    werkzeuge: ['karten', 'aktionsbrett'],
+    werkzeuge: ['landkarte', 'karten', 'aktionsbrett', 'zeitlinie'],
     skalaFrage: 'Wie viel Kraft hast du gerade?',
     leitfragen: [
       'Was kannst du richtig gut?',
@@ -51,7 +51,7 @@ export const PHASEN = [
     name: 'Plan',
     icon: 'bilder/app/plan.svg',
     frage: 'Was ist dein nächster Schritt?',
-    werkzeuge: ['karten', 'skala'],
+    werkzeuge: ['karten', 'commitment', 'skala'],
     skalaFrage: 'Wie sicher bist du, dass du deinen ersten Schritt schaffst?',
     leitfragen: [
       'Was ist ein kleiner erster Schritt?',
@@ -78,22 +78,81 @@ export const WERKZEUGE = {
     name: 'Skala',
     icon: 'bilder/app/skala.svg',
     info: 'Skalen auf die Fläche ziehen und Punkte setzen',
+    leitfragen: [
+      'Wo stehst du heute?',
+      'Was ist schon da, dass es nicht weiter unten ist?',
+      'Woran würdest du merken, dass du einen Punkt weiter oben bist?',
+      'Welcher Wert wäre für dich gut genug?',
+    ],
   },
   aktionsbrett: {
     id: 'aktionsbrett',
     name: 'Aktionsbrett',
     icon: 'bilder/app/aktionsbrett.svg',
     info: 'Figuren und Symbole aufstellen',
+    leitfragen: [
+      'Wer gehört alles dazu?',
+      'Wer steht wem nahe – wer ist weiter weg?',
+      'Wohin schaut die Figur?',
+      'Was müsste sich verändern, damit es sich besser anfühlt?',
+      'Stell es einmal so auf, wie du es dir wünschst.',
+    ],
   },
   karten: {
     id: 'karten',
     name: 'Karten',
     icon: 'bilder/app/karten.svg',
-    info: 'Methodenkarten beschriften, legen und verbinden',
+    info: 'Beschriften, verbinden, mit der Ampel ordnen',
+    leitfragen: [
+      'Was fällt dir alles dazu ein? Schreib jede Idee auf eine Karte.',
+      'Was gehört zusammen?',
+      'Ampel: Was packst du jetzt an (grün)? Was kommt bald (gelb)? Was kann warten (rot)?',
+      'Welche grüne Karte ist dein erster Schritt?',
+    ],
+  },
+  zeitlinie: {
+    id: 'zeitlinie',
+    name: 'Zeitlinie',
+    icon: 'bilder/app/zeitlinie.svg',
+    info: 'Vergangenheit, Heute, Zukunft – mit der Ich-Figur',
+    leitfragen: [
+      'Stell die Ich-Figur auf „Heute“. Wie ist es gerade?',
+      'Geh in die Vergangenheit: Wann war es schon einmal gut?',
+      'Was konntest du damals, das dir heute helfen kann? (als Pfeil mitnehmen)',
+      'Geh in die Zukunft: Wie ist es, wenn dein Ziel erreicht ist?',
+      'Was sagt dein Zukunfts-Ich zu dir heute?',
+    ],
+  },
+  landkarte: {
+    id: 'landkarte',
+    name: 'Ressourcen-Landkarte',
+    icon: 'bilder/app/landkarte.svg',
+    info: 'Menschen, Stärken, Orte, Hobbys, Erfolge',
+    leitfragen: [
+      'Wer ist für dich da, wenn es schwierig wird?',
+      'Was kannst du richtig gut?',
+      'Wo fühlst du dich wohl?',
+      'Was machst du gern – was gibt dir Energie?',
+      'Was hast du schon geschafft, worauf du stolz bist?',
+      'Je näher an dir, desto wichtiger: Wo gehört es hin?',
+    ],
+  },
+  commitment: {
+    id: 'commitment',
+    name: 'Commitment',
+    icon: 'bilder/app/commitment.svg',
+    info: 'Das nehme ich mir vor – mit Unterschrift',
+    leitfragen: [
+      'Was genau nimmst du dir vor?',
+      'Bis wann willst du das schaffen?',
+      'Wer oder was kann dir dabei helfen?',
+      'Wie sicher bist du? Was bräuchtest du für einen Punkt mehr?',
+      'Wollen wir beide unterschreiben?',
+    ],
   },
 };
 
-export const WERKZEUG_REIHENFOLGE = ['gefuehle', 'skala', 'aktionsbrett', 'karten'];
+export const WERKZEUG_REIHENFOLGE = ['gefuehle', 'skala', 'aktionsbrett', 'karten', 'zeitlinie', 'landkarte', 'commitment'];
 
 export const FARBEN = [
   '#ff6b6b', // rot

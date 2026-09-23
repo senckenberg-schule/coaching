@@ -20,6 +20,9 @@ export function createBoard(container, cfg) {
     onPlaced = () => {},
     onDoubleTap = () => {},
     emptyHint = '',
+    hintergrund = null, // (state) => Element: Vorlage im Hintergrund
+    onMoved = () => false, // (item) => true, wenn sich das Element dadurch verändert hat
+    pfeile = false, // Verbindungen als Pfeile zeichnen
   } = cfg;
   state.items ||= [];
   state.links ||= [];
@@ -31,7 +34,14 @@ export function createBoard(container, cfg) {
   const inkSvg = s('svg', { class: 'board-ink' });
   const oben = h('div', { class: 'board-over' });
   const hinweis = h('div', { class: 'board-empty' }, emptyHint);
-  root.append(hinweis, svg, ebene, inkSvg, oben);
+  const hintergrundEbene = h('div', { class: 'board-bg' });
+  root.append(hintergrundEbene, hinweis, svg, ebene, inkSvg, oben);
+  function hintergrundZeichnen() {
+    const el = hintergrund?.(state);
+    hintergrundEbene.replaceChildren(...(el ? [el] : []));
+    root.classList.toggle('mit-vorlage', !!el);
+  }
+  hintergrundZeichnen();
   container.append(root);
 
   let W = 1;
@@ -239,6 +249,7 @@ export function createBoard(container, cfg) {
           }
           festhalten(item);
           sanftSetzen(item);
+          if (onMoved(item)) inhaltZeichnen(item);
           hinweisAktualisieren();
           onChange();
           onPlaced(item);
@@ -248,6 +259,7 @@ export function createBoard(container, cfg) {
           hist.push(vorher);
           festhalten(item);
           sanftSetzen(item);
+          if (onMoved(item)) inhaltZeichnen(item);
           onChange();
         }
         toolbarZeichnen();
@@ -318,11 +330,27 @@ export function createBoard(container, cfg) {
     const ay = a.y * H;
     const bx = b.x * W;
     const by = b.y * H;
-    const mx = (ax + bx) / 2;
-    const my = (ay + by) / 2;
-    const nx = -(by - ay) * 0.12;
-    const ny = (bx - ax) * 0.12;
-    return `M${ax},${ay} Q${mx + nx},${my + ny} ${bx},${by}`;
+    const cx = (ax + bx) / 2 - (by - ay) * 0.12;
+    const cy = (ay + by) / 2 + (bx - ax) * 0.12;
+    if (!pfeile) return { d: `M${ax},${ay} Q${cx},${cy} ${bx},${by}` };
+    // Pfeil: Linie am Rand des Ziels enden lassen und eine Spitze anhängen
+    const [bw, bh] = groesse(b);
+    let tx = bx - cx;
+    let ty = by - cy;
+    const len = Math.hypot(tx, ty) || 1;
+    tx /= len;
+    ty /= len;
+    // Abstand von der Mitte bis zum Rand des Ziels in Pfeilrichtung
+    const hw = (bw * U * skalierung(b)) / 2;
+    const hh = (bh * U * skalierung(b)) / 2;
+    const rand = Math.min(hw / Math.max(Math.abs(tx), 1e-3), hh / Math.max(Math.abs(ty), 1e-3)) + 6;
+    const ex = bx - tx * rand;
+    const ey = by - ty * rand;
+    const L = Math.max(14, U * 2.4);
+    const px = ex - tx * L;
+    const py = ey - ty * L;
+    const spitze = `M${ex},${ey} L${px - ty * L * 0.6},${py + tx * L * 0.6} L${px + ty * L * 0.6},${py - tx * L * 0.6} Z`;
+    return { d: `M${ax},${ay} Q${cx},${cy} ${px},${py}`, spitze };
   }
 
   function verbindungenZeichnen() {
@@ -341,9 +369,10 @@ export function createBoard(container, cfg) {
         const unter = s('path', { class: 'link-under' });
         const line = s('path', { class: 'link-line' });
         const hit = s('path', { class: 'link-hit' });
-        g.append(unter, line, hit);
+        const pfeil = s('path', { class: 'link-pfeil' });
+        g.append(unter, line, pfeil, hit);
         svg.append(g);
-        e = { g, unter, line, hit };
+        e = { g, unter, line, hit, pfeil };
         linkEls.set(l.id, e);
         if (!readOnly) {
           hit.addEventListener('pointerdown', (ev) => {
@@ -352,11 +381,13 @@ export function createBoard(container, cfg) {
           });
         }
       }
-      const d = linkPfad(l);
-      if (!d) continue;
-      e.unter.setAttribute('d', d);
-      e.line.setAttribute('d', d);
-      e.hit.setAttribute('d', d);
+      const pfad = linkPfad(l);
+      if (!pfad) continue;
+      e.unter.setAttribute('d', pfad.d);
+      e.line.setAttribute('d', pfad.d);
+      e.hit.setAttribute('d', pfad.d);
+      if (pfad.spitze) e.pfeil.setAttribute('d', pfad.spitze);
+      else e.pfeil.removeAttribute('d');
       e.g.classList.toggle('selected', auswahl?.kind === 'link' && auswahl.id === l.id);
     }
     svg.style.setProperty('--lw', Math.max(3, U * 0.55) + 'px');
@@ -784,6 +815,10 @@ export function createBoard(container, cfg) {
       return auswahl?.kind === 'item' ? auswahl.id : null;
     },
     elementVon: (id) => els.get(id)?.el,
+    /** Vorlage im Hintergrund neu zeichnen (z. B. nach dem Umschalten). */
+    hintergrundNeu: hintergrundZeichnen,
+    /** Alle Elemente neu zeichnen (z. B. nach einer Änderung von außen). */
+    neuZeichnen: () => allesZeichnen(),
     /** Neues Element hinzufügen – optional direkt mit dem Finger weiterziehen. */
     addItem(item, e) {
       hist.push();

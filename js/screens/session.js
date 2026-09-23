@@ -8,6 +8,7 @@ import { attachLongPress } from '../gestures.js';
 import { avatar, toast, flash, confirmDialog } from '../ui.js';
 import { openCoach } from './coach.js';
 import { showFinish } from './finish.js';
+import { vorherigesCommitment, zeigeRueckblick } from './rueckblick.js';
 
 export function renderSession(root, sessionId, nav, { intro = false } = {}) {
   const ses = store.session(sessionId);
@@ -145,6 +146,7 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
       werkzeug = TOOL_IMPL[toolId].mount(platz, {
         state: ses.boards[key],
         phase: ses.phase,
+        schueler,
         onChange: speichern,
         onHistory: undoAktualisieren,
       });
@@ -219,6 +221,8 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
         nav.home();
       },
       notizGeaendert: speichern,
+      rueckblick: vorherCm ? () => zeigeRueckblick({ vorher: vorherCm, ses, schueler, onChange: speichern }) : null,
+      rueckblickErgebnis: () => vorherCm?.state.ergebnis || null,
     });
   }
 
@@ -269,6 +273,9 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
   phasenleisteZeichnen();
   buehneZeichnen();
   if (intro) phaseIntro(phaseById(ses.phase));
+  // Neue Sitzung: an das Commitment von letztem Mal erinnern
+  const vorherCm = vorherigesCommitment(ses);
+  if (intro && vorherCm) setTimeout(() => zeigeRueckblick({ vorher: vorherCm, ses, schueler, onChange: speichern }), 2500);
 
   return {
     el,
