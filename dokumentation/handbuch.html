@@ -1,0 +1,433 @@
+<title>Handbuch Coaching-App</title>
+<meta name="description" content="Handbuch zur Coaching-App für Schülerinnen und Schüler: Phasen, Werkzeuge, Apple Pencil, Momente, Commitment und Datenschutz.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+  :root {
+    --ink: #1d2340;
+    --ink-2: #4a5275;
+    --ink-3: #7c83a3;
+    --ground: #f6f4fb;
+    --surface: #ffffff;
+    --line: #e4e1f0;
+    --accent: #6a5cff;
+    --accent-soft: #ecebff;
+    --tip: #fff7e6;
+    --tip-line: #f5c26b;
+    --p1: #f76707;
+    --p2: #1c7ed6;
+    --p3: #2b9348;
+    --p4: #7048e8;
+    --shadow: 0 18px 40px rgba(40, 48, 110, 0.14), 0 3px 8px rgba(40, 48, 110, 0.08);
+    --display: "Nunito", ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ink: #ecebf7;
+      --ink-2: #c3c5dc;
+      --ink-3: #9297b5;
+      --ground: #15172a;
+      --surface: #1f2238;
+      --line: #33375a;
+      --accent: #9d93ff;
+      --accent-soft: #2b2b52;
+      --tip: #2e2718;
+      --tip-line: #a8813d;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ink: #ecebf7;
+    --ink-2: #c3c5dc;
+    --ink-3: #9297b5;
+    --ground: #15172a;
+    --surface: #1f2238;
+    --line: #33375a;
+    --accent: #9d93ff;
+    --accent-soft: #2b2b52;
+    --tip: #2e2718;
+    --tip-line: #a8813d;
+    --shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 400 17px/1.6 var(--body);
+    padding-inline: 16px;
+  }
+  .seite { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 48px; padding-block: 40px 80px; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(34px, 5vw, 52px); font-weight: 900; letter-spacing: -0.01em; }
+  h2 { font-size: 30px; font-weight: 900; margin-bottom: 14px; }
+  h3 { font-size: 21px; font-weight: 800; margin: 28px 0 8px; }
+  p { margin: 0 0 14px; max-width: 68ch; }
+  ul, ol { margin: 0 0 16px; padding-left: 22px; max-width: 68ch; }
+  li { margin-bottom: 6px; }
+  b, strong { font-weight: 700; }
+  a { color: var(--accent); }
+
+  /* Inhaltsverzeichnis */
+  nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; font-size: 15px; }
+  nav .marke { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 900; font-size: 18px; margin-bottom: 18px; }
+  nav .marke span { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: var(--surface); box-shadow: var(--shadow); font-size: 20px; }
+  nav ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+  nav a { display: block; padding: 6px 10px; border-radius: 10px; color: var(--ink-2); text-decoration: none; font-weight: 600; }
+  nav a:hover, nav a:focus-visible { background: var(--accent-soft); color: var(--ink); outline: none; }
+
+  /* Kopf */
+  header.kopf { padding-bottom: 28px; margin-bottom: 36px; border-bottom: 1px solid var(--line); }
+  .ober { font-family: var(--display); font-weight: 800; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .lead { font-size: 20px; color: var(--ink-2); margin-top: 14px; max-width: 60ch; }
+  .phasen { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .phase { display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px 8px; border-radius: 999px; background: var(--surface); box-shadow: 0 2px 8px rgba(40, 48, 110, 0.08); font-weight: 700; }
+  .phase i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-style: normal; font-family: var(--display); font-weight: 900; font-size: 15px; }
+  .phase small { display: block; font-weight: 600; color: var(--ink-3); font-size: 13px; line-height: 1.2; }
+
+  section { padding-top: 12px; margin-bottom: 64px; scroll-margin-top: 24px; }
+  .abschnitt-nr { font-family: var(--display); font-weight: 800; color: var(--ink-3); font-size: 15px; margin-bottom: 4px; }
+
+  figure { margin: 22px 0 28px; }
+  figure img {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    border: 6px solid var(--surface);
+  }
+  figcaption { margin-top: 12px; font-size: 15px; color: var(--ink-3); max-width: 70ch; }
+  figcaption b { color: var(--ink-2); }
+  .paar { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .paar figure { margin: 0; }
+  .hoch { max-width: 420px; }
+
+  .tipp { background: var(--tip); border: 1px solid var(--tip-line); border-radius: 16px; padding: 14px 18px; margin: 18px 0; max-width: 72ch; }
+  .tipp b:first-child { font-family: var(--display); }
+  .tipp p:last-child { margin-bottom: 0; }
+
+  .tabelle { overflow-x: auto; margin: 16px 0 20px; }
+  table { border-collapse: collapse; width: 100%; min-width: 520px; background: var(--surface); border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(40, 48, 110, 0.06); font-size: 15.5px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--display); font-weight: 800; font-size: 14px; color: var(--ink-2); background: var(--accent-soft); }
+  tr:last-child td { border-bottom: 0; }
+  .geste { white-space: nowrap; font-weight: 700; }
+
+  footer { border-top: 1px solid var(--line); padding-top: 20px; font-size: 14px; color: var(--ink-3); }
+
+  @media (max-width: 900px) {
+    .seite { grid-template-columns: 1fr; gap: 20px; padding-block: 24px 60px; }
+    nav { position: static; }
+    nav ol { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+    .paar { grid-template-columns: 1fr; }
+  }
+  @media print {
+    @page { size: A4; margin: 16mm 14mm; }
+    body { background: #fff; font-size: 11.5pt; padding: 0; }
+    .seite { display: block; padding: 0; max-width: none; }
+    nav { display: none; }
+    section { margin-bottom: 26px; break-before: page; }
+    section:first-of-type { break-before: auto; }
+    figure { break-inside: avoid; }
+    figure img { box-shadow: none; border: 1px solid #ddd; border-radius: 10px; }
+    .tipp, table { break-inside: avoid; }
+    h2, h3 { break-after: avoid; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="seite">
+  <nav aria-label="Inhalt">
+    <div class="marke"><span aria-hidden="true">🌱</span>Coaching-App</div>
+    <ol>
+      <li><a href="#ueberblick">Überblick</a></li>
+      <li><a href="#start">Personen &amp; Sitzungen</a></li>
+      <li><a href="#phasen">Die vier Phasen</a></li>
+      <li><a href="#coach">Coach-Bereich</a></li>
+      <li><a href="#flaeche">Arbeitsfläche &amp; Stift</a></li>
+      <li><a href="#gefuehle">Gefühle</a></li>
+      <li><a href="#skala">Skala</a></li>
+      <li><a href="#aktionsbrett">Aktionsbrett</a></li>
+      <li><a href="#karten">Karten &amp; Ampel</a></li>
+      <li><a href="#zeitlinie">Zeitlinie</a></li>
+      <li><a href="#landkarte">Ressourcen-Landkarte</a></li>
+      <li><a href="#momente">Momente</a></li>
+      <li><a href="#commitment">Commitment &amp; Rückblick</a></li>
+      <li><a href="#daten">Daten &amp; Datenschutz</a></li>
+      <li><a href="#ipad">Auf dem iPad nutzen</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="kopf">
+      <div class="ober">Handbuch</div>
+      <h1>Coaching-App für Schülerinnen und Schüler</h1>
+      <p class="lead">Die App begleitet ein Coaching auf dem iPad. Der Coach wählt die Werkzeuge aus, die Schülerin oder der Schüler arbeitet mit Fingern und Apple Pencil direkt auf der Fläche.</p>
+      <div class="phasen" aria-label="Die vier Phasen">
+        <div class="phase"><i style="background: var(--p1)">1</i><span>Ankommen<small>Wie geht es dir?</small></span></div>
+        <div class="phase"><i style="background: var(--p2)">2</i><span>Ziel<small>Wo möchtest du hin?</small></span></div>
+        <div class="phase"><i style="background: var(--p3)">3</i><span>Kraftquellen<small>Was gibt dir Kraft?</small></span></div>
+        <div class="phase"><i style="background: var(--p4)">4</i><span>Plan<small>Was ist dein nächster Schritt?</small></span></div>
+      </div>
+    </header>
+
+    <section id="ueberblick">
+      <div class="abschnitt-nr">1</div>
+      <h2>Überblick</h2>
+      <p>Ein Coaching folgt vier Phasen. In jeder Phase stehen Werkzeuge bereit: Gefühlskarten, Skalen, Aktionsbrett, Moderationskarten mit Ampel, Zeitlinie, Ressourcen-Landkarte und zum Abschluss das Commitment-Kärtchen.</p>
+      <p>Alle Werkzeuge außer dem Commitment arbeiten auf <b>derselben Arbeitsfläche</b>. Beim Wechsel des Werkzeugs bleibt alles liegen – es wechselt nur die Seitenleiste mit dem, was man neu dazulegen kann. So lassen sich die Methoden frei kombinieren.</p>
+      <div class="tabelle">
+        <table>
+          <thead><tr><th>Phase</th><th>Passende Werkzeuge</th></tr></thead>
+          <tbody>
+            <tr><td><b>1 · Ankommen</b></td><td>Gefühle, Skala</td></tr>
+            <tr><td><b>2 · Ziel</b></td><td>Skala, Zeitlinie, Aktionsbrett, Karten</td></tr>
+            <tr><td><b>3 · Kraftquellen</b></td><td>Ressourcen-Landkarte, Karten, Aktionsbrett, Zeitlinie</td></tr>
+            <tr><td><b>4 · Plan</b></td><td>Karten mit Ampel, Commitment, Skala</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Die Empfehlungen sind im Coach-Bereich mit „passt gut“ markiert. Jedes Werkzeug lässt sich aber in jeder Phase nutzen.</p>
+    </section>
+
+    <section id="start">
+      <div class="abschnitt-nr">2</div>
+      <h2>Personen &amp; Sitzungen</h2>
+      <figure>
+        <img src="screenshots/01-startseite.png" alt="Startseite mit den Kacheln für Ben, Jonas, Lea und Mia sowie der Kachel „Neu anlegen“" loading="lazy">
+        <figcaption><b>Startseite.</b> Jede Person hat eine eigene Kachel mit Anzahl und Datum der Sitzungen. Oben rechts geht es zu den Einstellungen.</figcaption>
+      </figure>
+      <ul>
+        <li><b>Neu anlegen:</b> Vorname oder Kürzel eingeben – mehr braucht es nicht.</li>
+        <li><b>Person antippen:</b> Neue Sitzung starten oder eine frühere Sitzung fortsetzen bzw. ansehen.</li>
+        <li>Name und Farbe lassen sich ändern. Sitzungen und Personen können gelöscht werden (mit Sicherheitsabfrage).</li>
+      </ul>
+      <figure>
+        <img src="screenshots/02-person.png" alt="Fenster für Mia mit dem Knopf „Neue Sitzung starten“ und zwei bisherigen Sitzungen" loading="lazy">
+        <figcaption><b>Übersicht einer Person.</b> Die kleinen Phasensymbole zeigen, wie weit eine Sitzung gekommen ist; dazu Uhrzeit, Stand und Anzahl der festgehaltenen Momente.</figcaption>
+      </figure>
+    </section>
+
+    <section id="phasen">
+      <div class="abschnitt-nr">3</div>
+      <h2>Die vier Phasen</h2>
+      <p>Beim Start einer Sitzung und bei jedem Phasenwechsel erscheint die Phase groß mit ihrer Frage an das Kind. Jede Phase hat eine eigene Farbwelt.</p>
+      <div class="paar">
+        <figure>
+          <img src="screenshots/03-phasen-einblendung.png" alt="Große Einblendung „Phase 1 von 4 – Ankommen“" loading="lazy">
+          <figcaption><b>Einblendung</b> beim Phasenwechsel.</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/04-phasenbild.png" alt="Phasenbild „Ankommen – Schön, dass du da bist! Wie geht es dir?“" loading="lazy">
+          <figcaption><b>Phasenbild</b>, solange noch kein Werkzeug gewählt ist.</figcaption>
+        </figure>
+      </div>
+      <ul>
+        <li><b>Phase wechseln:</b> Oben in der Mitte direkt auf die gewünschte Phase tippen – oder im Coach-Bereich.</li>
+        <li>Erledigte Phasen bekommen einen grünen Haken.</li>
+        <li>Normalerweise hat jede Phase ihre eigene Arbeitsfläche. Soll alles über die Phasen hinweg liegen bleiben, gibt es dafür einen Schalter im Coach-Bereich (siehe unten).</li>
+      </ul>
+    </section>
+
+    <section id="coach">
+      <div class="abschnitt-nr">4</div>
+      <h2>Der Coach-Bereich</h2>
+      <p>Das Coach-Symbol oben links <b>gedrückt halten</b> (ein Ring füllt sich). So öffnen Kinder den Bereich nicht aus Versehen.</p>
+      <div class="paar">
+        <figure>
+          <img src="screenshots/05-coach-bereich.png" alt="Coach-Bereich mit Phasen, Weiter-Knopf und Werkzeugauswahl" loading="lazy">
+          <figcaption><b>Oben:</b> Phase wählen, „Weiter“ zur nächsten Phase, Werkzeug wählen.</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/06-coach-bereich-fragen.png" alt="Coach-Bereich mit Schalter „Über alle Phasen behalten“ und Fragen zur Methode" loading="lazy">
+          <figcaption><b>Weiter unten:</b> Arbeitsfläche-Modus, Fragen zur Methode und Leitfragen zur Phase.</figcaption>
+        </figure>
+      </div>
+      <ul>
+        <li><b>Werkzeug:</b> Die Fläche bleibt beim Wechsel erhalten. „Arbeitsfläche leeren“ räumt sie ab (Momente bleiben).</li>
+        <li><b>Arbeitsfläche über alle Phasen behalten:</b> Ist der Schalter an, bleibt beim Phasenwechsel alles liegen, nur die Farben wechseln. Die letzte Wahl gilt auch für neue Sitzungen.</li>
+        <li><b>Fragen zur Methode</b> und <b>Leitfragen zur Phase</b> als Gesprächshilfe.</li>
+        <li><b>Letztes Mal:</b> Das Commitment aus der vorigen Sitzung noch einmal öffnen.</li>
+        <li><b>Momente</b> festhalten und vergleichen, <b>Notizen</b> (nur für den Coach), <b>Sitzung beenden</b> oder <b>Zur Übersicht</b>.</li>
+      </ul>
+    </section>
+
+    <section id="flaeche">
+      <div class="abschnitt-nr">5</div>
+      <h2>Arbeitsfläche &amp; Apple Pencil</h2>
+      <div class="tabelle">
+        <table>
+          <thead><tr><th>Geste</th><th>Wirkung</th></tr></thead>
+          <tbody>
+            <tr><td class="geste">Tippen / Ziehen aus der Seitenleiste</td><td>Neues Element auf die Fläche legen</td></tr>
+            <tr><td class="geste">Ein Finger</td><td>Verschieben – auch mehrere Elemente gleichzeitig</td></tr>
+            <tr><td class="geste">Zwei Finger</td><td>Drehen; bei Karten, Symbolen, Skalen, Zeitstrahl und Landkarte auch vergrößern</td></tr>
+            <tr><td class="geste">Antippen</td><td>Leiste mit Benennen, Farbe, Form, Ampel, Verbinden, Löschen …; der runde Knopf daneben dreht</td></tr>
+            <tr><td class="geste">Zweimal tippen</td><td>Karte beschreiben bzw. Figur benennen</td></tr>
+            <tr><td class="geste">Apple Pencil</td><td>Zeichnet auf der Fläche; auf einer Karte schreibt er direkt auf die Karte. Kurz antippen wählt aus.</td></tr>
+            <tr><td class="geste">Rückgängig (oben rechts)</td><td>Macht den letzten Schritt rückgängig – auch Striche</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Die <b>Stiftleiste</b> unten links bietet sechs Farben, dünn/dick, Radierer, „Finger malt“ (zum Zeichnen ohne Stift) und „Zeichnung löschen“. Liegt die Hand beim Schreiben auf dem Display, wird sie ignoriert.</p>
+      <figure>
+        <img src="screenshots/16-kombinieren.png" alt="Zeitstrahl mit Karten, Gefühlskarten, Ich-Figur und rotem Stiftkreis; rechts die Seitenleiste für Karten" loading="lazy">
+        <figcaption><b>Kombinieren:</b> Hier liegt ein Zeitstrahl mit Karten, Gefühlen und einem mit dem Stift gezeichneten Kreis. Mit dem Werkzeug „Karten“ zeigt die Seitenleiste neue Karten – die Fläche bleibt, wie sie ist.</figcaption>
+      </figure>
+    </section>
+
+    <section id="gefuehle">
+      <div class="abschnitt-nr">6</div>
+      <h2>Gefühle</h2>
+      <p>20 Gefühlskarten, sortiert nach Grundgefühl (Freude, Überraschung, Trauer, Wut, Angst, Scham). Die Filter oben in der Seitenleiste helfen beim Suchen; bereits gelegte Karten haben einen Haken.</p>
+      <figure>
+        <img src="screenshots/07-gefuehle.png" alt="Vier Gefühlskarten auf der Fläche, eine ausgewählt mit den Knöpfen ein bisschen, mittel, sehr" loading="lazy">
+        <figcaption><b>Stärke einschätzen:</b> Karte antippen und „ein bisschen“, „mittel“ oder „sehr“ wählen. Die Karte wird entsprechend kleiner oder größer, die Punkte zeigen die Stärke.</figcaption>
+      </figure>
+    </section>
+
+    <section id="skala">
+      <div class="abschnitt-nr">7</div>
+      <h2>Skala</h2>
+      <p>Skalen von 0 bis 10 sind Elemente auf der Fläche – beliebig viele, frei drehbar (z. B. senkrecht) und kombinierbar. Die Frage schreibt man mit dem Stift oben auf die Skala oder über „Frage“ ins große Schreibfeld.</p>
+      <figure>
+        <img src="screenshots/08-skala.png" alt="Skala mit handgeschriebener Frage „Wie geht es dir heute?“ und Punkt „Heute“ bei 6, darüber Gefühlskarten" loading="lazy">
+        <figcaption><b>Punkte setzen:</b> „Heute“, „Ziel“, „Nächster Schritt“ oder einen eigenen Punkt aus der Seitenleiste auf eine Skala ziehen und entlang der Leiste verschieben. Weit wegziehen löscht einen Punkt. Die Leiste der Skala bietet Punkt, Zahlen/Gesichter, Farbe und Löschen.</figcaption>
+      </figure>
+    </section>
+
+    <section id="aktionsbrett">
+      <div class="abschnitt-nr">8</div>
+      <h2>Aktionsbrett</h2>
+      <p>Figuren in rund oder eckig, groß oder klein und zehn Farben. Die Augen zeigen die Blickrichtung. Dazu Symbole für Orte, Dinge, Hindernisse und Kraftquellen.</p>
+      <figure>
+        <img src="screenshots/09-aktionsbrett.png" alt="Familien- und Klassensystem mit Figuren Mama, Papa, Ich, Ella, Frau Klein, Klasse sowie Symbolen Zuhause, Schule und Stein" loading="lazy">
+        <figcaption><b>Aufstellung:</b> Figur antippen für Name, Farbe, Form und Größe. Mit dem runden Knopf oder zwei Fingern drehen – die Blickrichtung ist oft ein guter Gesprächsanlass.</figcaption>
+      </figure>
+    </section>
+
+    <section id="karten">
+      <div class="abschnitt-nr">9</div>
+      <h2>Moderationskarten &amp; Ampel</h2>
+      <p>Karten gibt es rechteckig, rund, oval, als Herz, Stern und Kopf (seitlich). Sie werden <b>von Hand beschriftet</b> – mit dem Pencil oder dem Finger, nicht mit der Tastatur.</p>
+      <div class="paar">
+        <figure>
+          <img src="screenshots/13-schreibfeld.png" alt="Großes Schreibfeld mit der Handschrift „Frau Klein um Hilfe bitten“" loading="lazy">
+          <figcaption><b>Schreibfeld:</b> öffnet sich beim Anlegen einer Karte. Farben, dünn/dick, Zurück und Alles löschen.</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/14-kartenformen.png" alt="Menü mit den Formen rechteckig, rund, oval, Herz, Stern, Kopf" loading="lazy">
+          <figcaption><b>Formen:</b> Über „Form“ lässt sich jede Karte nachträglich ändern.</figcaption>
+        </figure>
+      </div>
+      <p>Man kann auch mit dem Stift direkt auf eine Karte auf der Fläche schreiben. „Verbinden“ zieht eine Linie zu einer anderen Karte; eine Linie lässt sich per Antippen zum Pfeil machen oder löschen.</p>
+      <h3>Priorisieren mit der Ampel</h3>
+      <figure>
+        <img src="screenshots/12-karten-ampel.png" alt="Ampel-Hintergrund mit den Zonen Jetzt (grün), Bald (gelb) und Später (rot) und passend eingefärbten Karten" loading="lazy">
+        <figcaption><b>Ampel-Hintergrund:</b> In der Seitenleiste unter „Hintergrund“ die Ampel wählen. Links grün („Jetzt – das packe ich an“), in der Mitte gelb („Bald“), rechts rot („Später“). Eine Karte bekommt automatisch die Farbe der Zone, in die man sie legt.</figcaption>
+      </figure>
+      <div class="tipp"><p><b>Tipp:</b> Erst frei Ideen sammeln (z. B. in „Kraftquellen“), dann in „Plan“ die Ampel einschalten und sortieren. Die grüne Karte wird oft zum ersten Schritt im Commitment.</p></div>
+    </section>
+
+    <section id="zeitlinie">
+      <div class="abschnitt-nr">10</div>
+      <h2>Zeitlinie</h2>
+      <p>Der Zeitstrahl ist ein Element: verschiebbar, drehbar, vergrößerbar. Auf einer leeren Fläche liegt er mit der <b>Ich-Figur</b> auf „Heute“ sofort bereit.</p>
+      <figure>
+        <img src="screenshots/15-zeitlinie.png" alt="Zeitstrahl von Vergangenheit über Heute bis Zukunft mit Ich-Figur, Karten, Gefühlen und einem Pfeil von der Vergangenheit in die Zukunft" loading="lazy">
+        <figcaption><b>Zeitlinie:</b> Die Ich-Figur an andere Zeitpunkte schieben, Ereignisse als Karten dazulegen, Gefühle zuordnen. Ein Pfeil von einer Karte der Vergangenheit zur Zukunft „nimmt eine Kraftquelle mit“.</figcaption>
+      </figure>
+      <ul>
+        <li>Was auf dem Zeitstrahl liegt – auch Stiftstriche –, <b>wandert beim Verschieben mit</b>.</li>
+        <li>Mit <b>Festmachen</b> (Stecknadel) bleibt er liegen. <b>Kleiner/Größer</b> passt die Größe an.</li>
+      </ul>
+    </section>
+
+    <section id="landkarte">
+      <div class="abschnitt-nr">11</div>
+      <h2>Ressourcen-Landkarte</h2>
+      <p>„Ich“ in der Mitte, rundherum sechs Bereiche: <b>Menschen, Stärken, Hobbys, Orte, Erfolge, Tiere &amp; Dinge</b>. Drei Ringe zeigen die Nähe – je näher an der Mitte, desto wichtiger.</p>
+      <figure>
+        <img src="screenshots/11-ressourcen-landkarte.png" alt="Ressourcen-Landkarte mit Mama, Ella und Oma bei Menschen, Karte „Ich kann gut malen“ bei Stärken, Klavier und Handball bei Hobbys, Mein Zimmer bei Orte, Stern „Seepferdchen“ bei Erfolge und Hund Bello" loading="lazy">
+        <figcaption><b>Landkarte:</b> Figuren, Symbole und Karten in die passenden Bereiche legen. Auch die Landkarte ist ein Element: Was darauf liegt, wandert mit; mit der Stecknadel wird sie festgemacht.</figcaption>
+      </figure>
+    </section>
+
+    <section id="momente">
+      <div class="abschnitt-nr">12</div>
+      <h2>Momente festhalten &amp; vergleichen</h2>
+      <p>Im Coach-Bereich hält „Moment festhalten“ den aktuellen Stand fest – mit Titelvorschlägen wie „So ist es jetzt“ oder „So soll es sein“. Mit „Vergleichen“ und zwei angetippten Momenten erscheinen sie nebeneinander.</p>
+      <figure>
+        <img src="screenshots/10-momente-vergleichen.png" alt="Vergleich zweier Aufstellungen: „So ist es jetzt“ und „So soll es sein“" loading="lazy">
+        <figcaption><b>Vergleich</b> zweier Aufstellungen: Im Wunschbild steht Mia näher bei der Klasse, das Hindernis ist verschwunden.</figcaption>
+      </figure>
+    </section>
+
+    <section id="commitment">
+      <div class="abschnitt-nr">13</div>
+      <h2>Commitment, Abschluss &amp; Rückblick</h2>
+      <p>Das Commitment-Kärtchen „Mein Versprechen an mich“ wird komplett von Hand ausgefüllt: Vorhaben, bis wann, wer hilft, wie sicher (0–10) und zwei Unterschriften.</p>
+      <figure>
+        <img src="screenshots/17-commitment.png" alt="Ausgefülltes Commitment-Kärtchen mit Handschrift, Zuversicht 7 und Unterschriften von Mia und Coach" loading="lazy">
+        <figcaption><b>Commitment:</b> Jedes Feld hat ein kleines ✕ zum Leeren. Das Datum wird automatisch eingetragen.</figcaption>
+      </figure>
+      <figure>
+        <img src="screenshots/18-abschluss.png" alt="Abschlussfeier mit Konfetti: „Super gemacht, Mia!“ und daneben das Commitment" loading="lazy">
+        <figcaption><b>Sitzung beenden:</b> kleine Feier mit Konfetti, den geschafften Phasen und dem Commitment.</figcaption>
+      </figure>
+      <div class="paar">
+        <figure>
+          <img src="screenshots/19-rueckblick.png" alt="Rückblick zu Beginn der nächsten Sitzung: „Letztes Mal hast du dir vorgenommen …“" loading="lazy">
+          <figcaption><b>Nächste Sitzung:</b> Nach der Begrüßung erscheint das Commitment von letztem Mal.</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/20-rueckblick-geschafft.png" alt="Commitment mit dem Stempel „Geschafft!“ und Konfetti" loading="lazy">
+          <figcaption><b>Wie ist es gelaufen?</b> Die Antwort kommt als Stempel aufs Kärtchen.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="daten">
+      <div class="abschnitt-nr">14</div>
+      <h2>Daten &amp; Datenschutz</h2>
+      <ul>
+        <li>Alle Daten bleiben <b>nur auf dem Gerät</b>. Es gibt keinen Server und keine Cloud.</li>
+        <li>Pro Person werden Sitzungen gespeichert und lassen sich später fortsetzen.</li>
+        <li>Für Namen reichen Vornamen oder Kürzel.</li>
+      </ul>
+      <figure>
+        <img src="screenshots/21-einstellungen.png" alt="Einstellungen mit Datensicherung, Hinweisen zu eigenen Bildern, Bildnachweis und „Alle Daten löschen“" loading="lazy">
+        <figcaption><b>Einstellungen:</b> Sicherung als Datei speichern und wieder laden, Hinweise zu eigenen Bildern, Bildnachweis, alle Daten löschen.</figcaption>
+      </figure>
+      <div class="tipp"><p><b>Wichtig:</b> Regelmäßig „Sicherung speichern“ nutzen (z. B. in „Dateien“). Die App auf dem Home-Bildschirm hat einen eigenen Speicher, getrennt von Safari – daher immer dieselbe Variante verwenden.</p></div>
+    </section>
+
+    <section id="ipad">
+      <div class="abschnitt-nr">15</div>
+      <h2>Auf dem iPad nutzen</h2>
+      <ol>
+        <li>Die App auf einem Webserver bereitstellen, z. B. über GitHub Pages oder einen Schul-Webspace.</li>
+        <li>Die Adresse auf dem iPad in <b>Safari</b> öffnen.</li>
+        <li>Teilen-Symbol → <b>„Zum Home-Bildschirm“</b>. Danach startet die App im Vollbild und funktioniert auch offline.</li>
+      </ol>
+      <p>Die App funktioniert im Quer- und im Hochformat. Im Hochformat rückt die Seitenleiste nach unten.</p>
+      <figure class="hoch">
+        <img src="screenshots/22-hochformat.png" alt="Aktionsbrett im Hochformat mit der Seitenleiste unten" loading="lazy">
+        <figcaption><b>Hochformat.</b></figcaption>
+      </figure>
+      <h3>Eigene Bilder</h3>
+      <p>Alle Bilder liegen im Ordner <code>bilder/</code>. Eine Datei mit gleichem Namen ersetzt das Platzhalter-Bild; neue Gefühle oder Symbole werden in <code>gefuehle.json</code> bzw. <code>symbole.json</code> eingetragen.</p>
+    </section>
+
+    <footer>
+      <p>Alle Namen und Inhalte in den Abbildungen sind erfunden. Emojis und Symbole: OpenMoji (CC BY-SA 4.0). Stiftstriche: perfect-freehand (MIT).</p>
+    </footer>
+  </main>
+</div>
