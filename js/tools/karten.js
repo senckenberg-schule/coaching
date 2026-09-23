@@ -5,14 +5,21 @@ import { icon } from '../icons.js';
 import { trayItem } from '../board.js';
 import { FARBEN } from '../data.js';
 import { schreibfeld, karteInkSvg } from '../ink.js';
+import { SVG_FORMEN, formSvg, formMiniSvg } from '../formen.js';
 import { segmented } from '../ui.js';
 
 const FORMEN = {
   rechteckig: { name: 'rechteckig', size: [21, 13.5] },
   rund: { name: 'rund', size: [15.5, 15.5] },
   oval: { name: 'oval', size: [23, 14] },
+  herz: { name: 'Herz', size: [18, 16.5] },
+  stern: { name: 'Stern', size: [19, 18.5] },
+  kopf: { name: 'Kopf', size: [17, 19.5] },
 };
-const FORM_REIHE = ['rechteckig', 'rund', 'oval'];
+const FORM_REIHE = ['rechteckig', 'rund', 'oval', 'herz', 'stern', 'kopf'];
+
+/** Kleines Symbol der Form für Menüs. */
+const formMini = (f) => (SVG_FORMEN[f] ? formMiniSvg(f) : h('span', { class: 'form-mini ' + f }));
 
 export const AMPEL = {
   rot: { name: 'Später', text: 'kann warten', farbe: '#f03e3e' },
@@ -33,9 +40,14 @@ function schriftgroesse(text) {
 
 export function karteElement(form, farbe, text, ink, ampel) {
   const hatSchrift = ink?.striche?.length > 0;
+  const besonders = !!SVG_FORMEN[form];
   return h(
     'div',
-    { class: `karte ${form}` + (ampel ? ' ampel-' + ampel : ''), style: { '--c': farbe, '--ampel': AMPEL[ampel]?.farbe } },
+    {
+      class: `karte ${form}` + (besonders ? ' form-svg' : '') + (ampel ? ' ampel-' + ampel : ''),
+      style: { '--c': farbe, '--ampel': AMPEL[ampel]?.farbe },
+    },
+    besonders ? formSvg(form) : null,
     // Ältere, getippte Karten zeigen ihren Text
     text
       ? h('span', { class: 'karte-text', style: { fontSize: `calc(var(--u) * ${schriftgroesse(text)})` } }, text)
@@ -57,7 +69,7 @@ export const KARTE_TYPE = {
   size: (it) => FORMEN[it.form]?.size || FORMEN.rechteckig.size,
   rotate: true,
   scale: true,
-  radius: (it) => (it.form === 'rechteckig' ? 'calc(var(--u) * 2.2)' : '50%'),
+  radius: (it) => (it.form === 'rechteckig' ? 'calc(var(--u) * 2.2)' : SVG_FORMEN[it.form] ? '24%' : '50%'),
   // Mit dem Stift direkt auf die Karte schreiben
   schreibbar: true,
   render(it, inner) {
@@ -107,7 +119,7 @@ export function kartenToolbar(it, api) {
       label: 'Form',
       menu: () =>
         FORM_REIHE.map((f) => ({
-          content: h('span', { class: 'form-mini ' + f }),
+          content: formMini(f),
           label: FORMEN[f].name,
           active: f === it.form,
           onClick: () => api.change(it, () => (it.form = f)),

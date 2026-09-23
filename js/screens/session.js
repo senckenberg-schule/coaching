@@ -76,6 +76,9 @@ export function renderSession(root, sessionId, nav, { intro = false } = {}) {
               'phase-pill' +
               (i === aktiv ? ' active' : '') +
               (i < aktiv || i <= (ses.maxPhase ?? 0) ? ' done' : ''),
+            role: 'button',
+            'aria-label': `Zur Phase ${p.name}`,
+            onClick: () => phaseWechseln(p.id),
           },
           h('span', { class: 'pp-icon' }, img(p.icon)),
           h('span', { class: 'pp-text' }, h('small', null, `Phase ${i + 1}`), h('b', null, p.name)),

@@ -4,6 +4,7 @@ import { getStroke } from './vendor/perfect-freehand.js';
 import { h, s, uid } from './util.js';
 import { icon } from './icons.js';
 import { sheet } from './ui.js';
+import { SVG_FORMEN, formSvg } from './formen.js';
 
 export const STIFT_FARBEN = ['#1d2340', '#1c7ed6', '#e03131', '#2b9348', '#f76707', '#9c36b5'];
 
@@ -97,7 +98,11 @@ export function schreibfeld({ titel = 'Schreib auf die Karte', form, farbe, ink,
     const leer = h('div', { class: 'pad-leer' }, icon('pencil'), 'Schreib oder male hier');
     const flaeche = h(
       'div',
-      { class: `karte ${form} pad`, style: { '--c': farbe, width: breite + 'px', height: hoehe + 'px' } },
+      {
+        class: `karte ${form} pad` + (SVG_FORMEN[form] ? ' form-svg' : ''),
+        style: { '--c': farbe, width: breite + 'px', height: hoehe + 'px' },
+      },
+      SVG_FORMEN[form] ? formSvg(form) : null,
       leer,
       svg,
     );

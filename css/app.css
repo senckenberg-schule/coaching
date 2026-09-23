@@ -1501,3 +1501,36 @@ input, textarea {
 /* Coach-Bereich: Fragen zur Methode */
 .dr-questions.methode li { background: color-mix(in srgb, var(--accent) 10%, white); }
 .badge-ok { margin-left: auto; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #37b24d; color: #fff; font-size: 14px; }
+
+/* =========================================================
+   Besondere Kartenformen: Herz, Stern, Kopf
+   ========================================================= */
+.karte.form-svg { background: none; border: 0; box-shadow: none; overflow: visible; }
+.karte.form-svg[class*="ampel-"] { border: 0; box-shadow: none; }
+.form-svg-bg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; filter: drop-shadow(0 8px 10px rgba(30, 40, 90, 0.18)); }
+.form-svg-bg path { stroke: rgba(255, 255, 255, 0.95); stroke-width: 2.5px; stroke-linejoin: round; transition: stroke 0.3s; }
+.form-svg-bg .fs-hell { stop-color: color-mix(in srgb, var(--c) 26%, white); }
+.form-svg-bg .fs-satt { stop-color: color-mix(in srgb, var(--c) 60%, white); }
+.karte.form-svg[class*="ampel-"] .form-svg-bg path { stroke: var(--ampel); stroke-width: 4px; }
+.karte.form-svg > .karte-text, .karte.form-svg > .karte-leer { position: relative; z-index: 1; }
+.karte.stern > .karte-text { font-size: calc(var(--u) * 1.6) !important; }
+.karte.pad.form-svg { box-shadow: none; }
+.ampel-badge.herz, .ampel-badge.stern, .ampel-badge.kopf { right: 6%; top: calc(var(--u) * -1.2); }
+
+.form-mini-svg { width: 22px; height: 20px; }
+.form-mini-svg path { fill: none; stroke: currentColor; stroke-width: 8; stroke-linejoin: round; }
+
+/* Seitenleiste: sechs Formen in zwei Spalten */
+.tray-grid.cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tray-grid.cards .card-preview { flex-direction: column; gap: 6px; padding: 4px 2px; font-size: 14px; }
+.card-preview.herz .karte { width: 50px; height: 46px; }
+.card-preview.stern .karte { width: 54px; height: 52px; }
+.card-preview.kopf .karte { width: 44px; height: 50px; }
+.card-preview .karte.form-svg { position: relative; }
+
+/* Phasen oben antippbar */
+.phase-pill { cursor: pointer; }
+.phase-pill:not(.active):active { transform: scale(0.94); }
+@media (orientation: portrait) {
+  .tray-grid.cards { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
