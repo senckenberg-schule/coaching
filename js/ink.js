@@ -348,8 +348,6 @@ export function stiftleiste({ onClear, onChange = () => {} }) {
 // Schreibfeld direkt in der Seite (z. B. auf dem Commitment-Kärtchen)
 // ---------------------------------------------------------------
 
-let stiftGesehen = false;
-
 /**
  * Fläche, auf die man mit Stift oder Finger schreibt.
  * onStart() wird vor jedem Strich aufgerufen (für Rückgängig),
@@ -386,10 +384,17 @@ export function inkFeld({ ink = null, readOnly = false, onStart = () => {}, onCh
     ];
   };
   el.addEventListener('pointerdown', (e) => {
-    if (e.pointerType === 'pen') stiftGesehen = true;
-    else if (stiftGesehen && e.pointerType === 'touch') return; // Handballen
-    if (strich) return;
     e.preventDefault();
+    if (istHandballen(e)) return;
+    if (e.pointerType === 'pen') {
+      stiftRunter();
+      // Lag die Hand zuerst auf, hat der Stift Vorrang
+      if (strich && !strich.druck) {
+        pfad.remove();
+        strich = null;
+      }
+    }
+    if (strich) return;
     el.setPointerCapture(e.pointerId);
     const r = el.getBoundingClientRect();
     if (!aktuell) {
@@ -411,6 +416,7 @@ export function inkFeld({ ink = null, readOnly = false, onStart = () => {}, onCh
     pfad.setAttribute('d', strichD(strich.p, strich.g, strich.druck, false));
   });
   const ende = (e) => {
+    if (e.pointerType === 'pen') stiftHoch();
     if (!strich || e.pointerId !== strich.pid) return;
     delete strich.pid;
     aktuell = { ...aktuell, striche: [...aktuell.striche, strich] };
