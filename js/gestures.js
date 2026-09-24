@@ -25,6 +25,7 @@ export function attachGesture(el, handler) {
   let start = null;
   let bewegt = false;
   let t0 = 0;
+  let typ = '';
 
   function basis() {
     const p = [...finger.values()];
@@ -46,6 +47,7 @@ export function attachGesture(el, handler) {
     finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
     basis();
     if (erster) {
+      typ = e.pointerType;
       bewegt = false;
       t0 = performance.now();
       start = letzte.c;
@@ -103,6 +105,23 @@ export function attachGesture(el, handler) {
     begin,
     get count() {
       return finger.size;
+    },
+    /** Art des ersten Zeigers ('touch', 'mouse' …). */
+    get typ() {
+      return typ;
+    },
+    /** Geste stillschweigend beenden (z. B. Handballen, sobald der Stift aufsetzt). Liefert, ob schon bewegt wurde. */
+    abbrechen() {
+      const ids = [...finger.keys()];
+      finger.clear();
+      for (const id of ids) {
+        try {
+          el.releasePointerCapture(id);
+        } catch {
+          /* schon freigegeben */
+        }
+      }
+      return bewegt;
     },
   };
 }

@@ -16,6 +16,26 @@ export const stift = {
   finger: false,
 };
 
+// Handballen-Erkennung: Solange der Pencil aufliegt (und kurz danach)
+// zählen Berührungen mit der Hand nicht.
+const stiftZustand = { gesehen: false, unten: 0, zuletzt: 0 };
+export function stiftRunter() {
+  stiftZustand.gesehen = true;
+  stiftZustand.unten++;
+  stiftZustand.zuletzt = performance.now();
+}
+export function stiftHoch() {
+  stiftZustand.unten = Math.max(0, stiftZustand.unten - 1);
+  stiftZustand.zuletzt = performance.now();
+}
+/** Ist diese Berührung vermutlich der Handballen beim Schreiben? */
+export function istHandballen(e) {
+  if (e.pointerType !== 'touch' || stift.finger || !stiftZustand.gesehen) return false;
+  const seit = performance.now() - stiftZustand.zuletzt;
+  // (Sicherheitsnetz: ein verlorenes „Stift hoch“ blockiert die Finger höchstens kurz)
+  return (stiftZustand.unten > 0 && seit < 8000) || seit < 600;
+}
+
 /** Zeichnet der Zeiger (Pencil immer, Finger/Maus nur im Finger-Modus)? */
 export const zeichnetZeiger = (e) => e.pointerType === 'pen' || stift.finger;
 
@@ -116,7 +136,6 @@ export function schreibfeld({ titel = 'Schreib auf die Karte', form, farbe, ink,
 
     // --- Zeichnen ---
     let aktiv = null;
-    let stiftBenutzt = false;
     const lokal = (e) => {
       const r = svg.getBoundingClientRect();
       return [
@@ -125,14 +144,22 @@ export function schreibfeld({ titel = 'Schreib auf die Karte', form, farbe, ink,
       ];
     };
     flaeche.addEventListener('pointerdown', (e) => {
-      if (e.pointerType === 'pen') stiftBenutzt = true;
-      else if (stiftBenutzt && e.pointerType === 'touch') return; // Handballen ignorieren
-      if (aktiv) return;
       e.preventDefault();
+      if (istHandballen(e)) return;
+      if (e.pointerType === 'pen') {
+        stiftRunter();
+        // Lag die Hand zuerst auf, war das kein Strich – der Stift hat Vorrang
+        if (aktiv && aktiv.typ !== 'pen') {
+          aktiv.pfad.remove();
+          aktiv = null;
+        }
+      }
+      if (aktiv) return;
       flaeche.setPointerCapture(e.pointerId);
       const druck = e.pointerType === 'pen';
       aktiv = {
         id: e.pointerId,
+        typ: e.pointerType,
         strich: { id: uid(), farbe: stift.farbe, g: kartenStiftGroesse(), druck, p: [[...lokal(e), druckVon(e)]] },
         pfad: s('path', { fill: stift.farbe }),
       };
@@ -145,6 +172,7 @@ export function schreibfeld({ titel = 'Schreib auf die Karte', form, farbe, ink,
       aktiv.pfad.setAttribute('d', strichD(aktiv.strich.p, aktiv.strich.g, aktiv.strich.druck, false));
     });
     const ende = (e) => {
+      if (e.pointerType === 'pen') stiftHoch();
       if (!aktiv || e.pointerId !== aktiv.id) return;
       striche.push(aktiv.strich);
       aktiv = null;

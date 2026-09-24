@@ -2,7 +2,7 @@
 // Strategie: sofort aus dem Speicher liefern und im Hintergrund aktualisieren.
 // So erscheinen neue Versionen (z. B. ausgetauschte Bilder) beim nächsten Start.
 
-const CACHE = 'coaching-v2';
+const CACHE = 'coaching-v3';
 
 const KERN = [
   './',

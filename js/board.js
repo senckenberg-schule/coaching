@@ -6,7 +6,7 @@ import { icon } from './icons.js';
 import { attachGesture } from './gestures.js';
 import { createHistory } from './history.js';
 import { confirmDialog } from './ui.js';
-import { stift, zeichnetZeiger, strichD, ereignisPunkte, druckVon, stiftleiste, kartenStiftGroesse } from './ink.js';
+import { stift, zeichnetZeiger, strichD, ereignisPunkte, druckVon, stiftleiste, kartenStiftGroesse, istHandballen, stiftRunter, stiftHoch } from './ink.js';
 
 export function createBoard(container, cfg) {
   const {
@@ -67,17 +67,14 @@ export function createBoard(container, cfg) {
   let zoomAnzeige = null;
   let eingepasst = false;
 
-  const hist = createHistory(
-    () => ({ items: state.items, links: state.links, ink: state.ink }),
-    (s) => {
-      state.items = s.items;
-      state.links = s.links;
-      state.ink = s.ink || [];
-      allesZeichnen();
-      onChange();
-    },
-    onHistory,
-  );
+  function zustandSetzen(s) {
+    state.items = s.items;
+    state.links = s.links;
+    state.ink = s.ink || [];
+    allesZeichnen();
+    onChange();
+  }
+  const hist = createHistory(() => ({ items: state.items, links: state.links, ink: state.ink }), zustandSetzen, onHistory);
 
   // ---------- Maße ----------
   function messen() {
@@ -227,16 +224,16 @@ export function createBoard(container, cfg) {
   }
 
   /** Sucht einen freien Platz, möglichst weit weg von allem anderen. */
-  function freierPlatz() {
+  function freierPlatz(ohne = null) {
     const v = sicht();
     let best = { x: v.mx, y: v.my, d: -1 };
     for (let gx = 0; gx < 7; gx++) {
       for (let gy = 0; gy < 5; gy++) {
         const x = v.x0 + (0.14 + (gx / 6) * 0.72 + (Math.random() - 0.5) * 0.04) / zoom;
-        const y = v.y0 + (0.18 + (gy / 4) * 0.64 + (Math.random() - 0.5) * 0.04) / zoom;
+        const y = v.y0 + (0.17 + (gy / 4) * 0.56 + (Math.random() - 0.5) * 0.04) / zoom;
         let d = Infinity;
         for (const it of state.items) {
-          if (it._neu || typ(it).unten) continue;
+          if (it === ohne || it._neu || typ(it).unten) continue;
           d = Math.min(d, Math.hypot((it.x - x) * W, (it.y - y) * H));
         }
         const zentrum = Math.hypot((x - v.mx) * W, (y - v.my) * H) * 0.15;
@@ -267,7 +264,7 @@ export function createBoard(container, cfg) {
     let vorher = null;
     let kuerzlichNeu = false;
     let passagiere = null;
-    const g = attachGesture(eintrag.el, {
+    const handler = {
       onStart() {
         vorher = hist.capture();
         kuerzlichNeu = !!item._neu;
@@ -276,6 +273,15 @@ export function createBoard(container, cfg) {
         eintrag.el.classList.add('dragging');
         aktiveGesten.add(g);
         oben.classList.add('hidden');
+      },
+      // Der Stift setzt auf, während die Hand ein Element hält: Hand war keine Absicht
+      abbrechen() {
+        if (kuerzlichNeu) return;
+        const bewegt = g.abbrechen();
+        eintrag.el.classList.remove('dragging');
+        aktiveGesten.delete(g);
+        oben.classList.remove('hidden');
+        if (bewegt && vorher) zustandSetzen(JSON.parse(vorher));
       },
       onMove({ dx, dy, dr, ds, count }) {
         if (item.fest) return; // festgemacht
@@ -305,7 +311,7 @@ export function createBoard(container, cfg) {
         if (kuerzlichNeu) {
           delete item._neu;
           if (!moved) {
-            const p = t.unten ? { x: sicht().mx, y: sicht().my } : freierPlatz();
+            const p = t.unten ? { x: sicht().mx, y: sicht().my } : freierPlatz(item);
             item.x = p.x;
             item.y = p.y;
           }
@@ -342,7 +348,9 @@ export function createBoard(container, cfg) {
         if (auswahl?.id === item.id) auswahlSetzen(null);
         else auswahlSetzen({ kind: 'item', id: item.id });
       },
-    });
+    };
+    const g = attachGesture(eintrag.el, handler);
+    g.handAbbrechen = handler.abbrechen;
     return g;
   }
 
@@ -373,7 +381,7 @@ export function createBoard(container, cfg) {
       /* Zeiger bereits beendet */
     }
     flaechenFinger.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (!flaechenGeste) flaechenGeste = { t0: performance.now(), weg: 0, start: [e.clientX, e.clientY] };
+    if (!flaechenGeste) flaechenGeste = { t0: performance.now(), weg: 0, start: [e.clientX, e.clientY], ansicht: [zoom, panX, panY] };
     flaechenGeste.basis = fingerMitte();
   }
 
@@ -913,7 +921,22 @@ export function createBoard(container, cfg) {
   }
 
   let zeichnung = null;
-  let letzterStift = 0;
+
+  /** Setzt der Stift auf, war eine gleichzeitige Berührung der Hand keine Absicht. */
+  function handGestenAbbrechen() {
+    for (const g of [...aktiveGesten]) if (g.typ === 'touch') g.handAbbrechen();
+    if (flaechenGeste && [...flaechenFinger.keys()].length) {
+      const g = flaechenGeste;
+      flaechenFinger.clear();
+      flaechenGeste = null;
+      root.classList.remove('panning');
+      oben.classList.remove('hidden');
+      if (g.bewegt && g.ansicht) {
+        [zoom, panX, panY] = g.ansicht;
+        ansichtAnwenden();
+      }
+    }
+  }
 
   function radieren(e) {
     const [wx, wy] = weltPunkt(e);
@@ -946,7 +969,7 @@ export function createBoard(container, cfg) {
       if (readOnly || e.target.closest('.btoolbar, .rotknob, .inkbar, .zoombar, .link-hint')) return;
       if (!zeichnetZeiger(e)) {
         // Handballen beim Schreiben ignorieren
-        if (e.pointerType === 'touch' && (zeichnung || performance.now() - letzterStift < 350)) {
+        if (istHandballen(e) || (e.pointerType === 'touch' && zeichnung)) {
           e.stopPropagation();
           e.preventDefault();
         }
@@ -955,6 +978,10 @@ export function createBoard(container, cfg) {
       e.stopPropagation();
       e.preventDefault();
       if (zeichnung) return;
+      if (e.pointerType === 'pen') {
+        stiftRunter();
+        handGestenAbbrechen();
+      }
       try {
         root.setPointerCapture(e.pointerId);
       } catch {
@@ -1017,7 +1044,7 @@ export function createBoard(container, cfg) {
     if (!zeichnung || e.pointerId !== zeichnung.id) return;
     const z = zeichnung;
     zeichnung = null;
-    if (e.pointerType === 'pen') letzterStift = performance.now();
+    if (e.pointerType === 'pen') stiftHoch();
     oben.classList.remove('hidden');
     if (z.art === 'radierer') {
       if (z.geaendert) {
